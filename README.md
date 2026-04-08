@@ -489,6 +489,85 @@ The environment logs all operations with ISO 8601 timestamps:
 
 Logs are saved to `logs/` directory with ISO 8601 timestamps.
 
+## ✅ Deployment Verification
+
+The HuggingFace Space has been tested and verified to be fully functional. All API endpoints are responding correctly and the environment is ready for production use.
+
+### Live Space URL
+- **Space**: https://huggingface.co/spaces/Varshini28/openenv-bug-triage-env
+- **API Endpoint**: https://Varshini28-openenv-bug-triage-env.hf.space
+
+### Endpoint Test Results
+
+| Endpoint | Method | Status | Response |
+|----------|--------|--------|----------|
+| `/health` | GET | ✅ 200 OK | `{"status": "healthy"}` |
+| `/reset` | POST | ✅ 200 OK | Valid observation with bug report and module list |
+| `/step` | POST | ✅ 200 OK | Reward calculation, action tracking, episode state |
+| `/state` | POST | ✅ 200 OK | Current environment state |
+
+### Sample API Response - `/reset` Endpoint
+
+**Request:**
+```bash
+curl -X POST https://Varshini28-openenv-bug-triage-env.hf.space/reset \
+  -H "Content-Type: application/json"
+```
+
+**Response:**
+```json
+{
+  "observation": {
+    "bug_report": "Login fails for users with special characters in their password. Regular passwords work fine.",
+    "repo_modules": ["auth.py", "validation.py", "security.py", "utils.py"],
+    "previous_actions": []
+  }
+}
+```
+
+### Sample API Response - `/step` Endpoint
+
+**Request:**
+```bash
+curl -X POST https://Varshini28-openenv-bug-triage-env.hf.space/step \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bug_type": "authentication",
+    "file": "auth.py",
+    "fix": "Add proper escaping for special characters in password validation"
+  }'
+```
+
+**Response:**
+```json
+{
+  "reward": 0.3,
+  "done": false,
+  "observation": {
+    "bug_report": "Login fails for users with special characters in their password. Regular passwords work fine.",
+    "repo_modules": ["auth.py", "validation.py", "security.py", "utils.py"],
+    "previous_actions": [
+      "step_1: {\"bug_type\":\"authentication\",\"file\":\"auth.py\",\"fix\":\"Add proper escaping for special characters in password validation\"}"
+    ]
+  },
+  "info": {
+    "step": 1,
+    "total_reward": 0.3,
+    "done": false
+  }
+}
+```
+
+### Verification Summary
+
+✓ All endpoints responding with HTTP 200 status
+✓ Correct data structures returned
+✓ Episode state tracking working properly
+✓ Reward calculation functioning correctly
+✓ Action normalization and validation working
+✓ Docker containerization verified on port 7860
+✓ Environment ready for production use
+
 ## 🔗 Additional Resources
 
 - **API Documentation**: See [API.md](API.md) for detailed API reference
