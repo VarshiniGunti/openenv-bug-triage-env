@@ -1,5 +1,10 @@
 # OpenEnv Bug Triage Environment
 
+![OpenEnv](https://img.shields.io/badge/OpenEnv-Compatible-blue)
+![Python](https://img.shields.io/badge/Python-3.11-green)
+![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
+
 **An AI-driven bug triage simulation environment for the Meta × OpenEnv Hackathon**
 
 A production-ready OpenEnv environment that enables AI agents to learn and practice software engineering bug triage tasks. This environment implements the OpenEnv API standard and provides three progressively challenging tasks where agents must analyze bug reports, identify root causes, and propose solutions.
@@ -479,7 +484,7 @@ Logs are saved to `logs/` directory with ISO 8601 timestamps.
 
 - **API Documentation**: See [API.md](API.md) for detailed API reference
 - **OpenEnv Specification**: https://github.com/openenv/openenv
-- **Hackathon Details**: https://www.meta.com/openenv-hackathon
+- **Hackathon Details**: [https://www.meta.com/openenv-hackathon](https://www.scaler.com/school-of-technology/meta-pytorch-hackathon)
 
 ## 📄 License
 
@@ -492,7 +497,6 @@ For issues, questions, or contributions:
 1. Check existing documentation in [API.md](API.md)
 2. Review test cases in `tests/` directory
 3. Open an issue on GitHub
-4. Contact the development team
 
 ## 🎓 Citation
 
@@ -507,8 +511,6 @@ If you use this environment in your research, please cite:
 }
 ```
 
----
 
-**Status**: Ready for Meta × OpenEnv Hackathon Submission
 
-**Last Updated**: April 2024
+
