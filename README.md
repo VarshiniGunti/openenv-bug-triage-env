@@ -423,48 +423,46 @@ The inference script produces structured logs:
 
 ```
 .
-├── env.py                    # Main BugTriageEnv class
-├── config_manager.py         # Configuration management
-├── logging_config.py         # Logging setup
-├── inference.py              # OpenAI-compatible inference script
-├── verify.py                 # Environment verification utilities
-├── verify_submission.py      # Hackathon submission validator
-├── requirements.txt          # Python dependencies
-├── Dockerfile                # Docker configuration
-├── docker-compose.yml        # Docker Compose configuration
-├── openenv.yaml              # OpenEnv configuration
-├── API.md                    # Detailed API documentation
+├── Dockerfile                # Docker configuration for HuggingFace Spaces
+├── inference.py              # Inference script (OpenAI-compatible API)
+├── pyproject.toml            # PEP 621 project configuration
 ├── README.md                 # This file
+├── openenv.yaml              # OpenEnv configuration
+├── requirements.txt          # Python dependencies
+│
+├── environment/              # OpenEnv environment implementation
+│   ├── __init__.py
+│   ├── env.py               # BugTriageEnv class with reset/step/state
+│   └── grader.py            # Dynamic grader with variable scoring
+│
+├── baseline/                 # Baseline agent
+│   ├── __init__.py
+│   └── baseline_agent.py     # Reference agent implementation
+│
+├── tasks/                    # Task definitions
+│   ├── task1.json           # Easy task (authentication bug)
+│   ├── task2.json           # Medium task (database bug)
+│   └── task3.json           # Hard task (memory leak)
 │
 ├── models/                   # Pydantic data models
-│   ├── __init__.py
 │   ├── action.py             # BugAction model
 │   ├── observation.py        # BugObservation model
 │   ├── scenario.py           # BugScenario model
 │   └── config.py             # Config model
 │
-├── tasks/                    # Task datasets
-│   ├── __init__.py
-│   ├── easy_task.py          # 14 easy scenarios
-│   ├── medium_task.py        # 14 medium scenarios
-│   └── hard_task.py          # 14 hard scenarios
-│
 ├── graders/                  # Grading logic
-│   ├── __init__.py
 │   ├── easy_grader.py        # Easy task grader
 │   ├── medium_grader.py      # Medium task grader
-│   └── hard_grader.py        # Hard task grader (semantic evaluation)
+│   └── hard_grader.py        # Hard task grader
 │
 ├── utils/                    # Utility functions
-│   ├── __init__.py
-│   └── normalization.py      # Action normalization utilities
+│   └── normalization.py      # Action normalization
 │
 └── tests/                    # Test suite
-    ├── __init__.py
-    ├── test_env.py           # Environment tests
-    ├── test_graders.py       # Grader tests
-    ├── test_models.py        # Model tests
-    └── test_normalization.py # Normalization tests
+    ├── test_env.py
+    ├── test_graders.py
+    ├── test_models.py
+    └── test_normalization.py
 ```
 
 ## 📊 Performance Metrics
