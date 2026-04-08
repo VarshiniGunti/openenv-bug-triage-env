@@ -1,5 +1,10 @@
 # OpenEnv Bug Triage Environment
 
+![OpenEnv](https://img.shields.io/badge/OpenEnv-Compatible-blue)
+![Python](https://img.shields.io/badge/Python-3.11-green)
+![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
+
 **An AI-driven bug triage simulation environment for the Meta × OpenEnv Hackathon**
 
 A production-ready OpenEnv environment that enables AI agents to learn and practice software engineering bug triage tasks. This environment implements the OpenEnv API standard and provides three progressively challenging tasks where agents must analyze bug reports, identify root causes, and propose solutions.
