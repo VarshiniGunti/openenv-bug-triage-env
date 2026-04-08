@@ -1,0 +1,9 @@
+include README.md
+include LICENSE
+include requirements.txt
+include openenv.yaml
+recursive-include models *.py
+recursive-include tasks *.py
+recursive-include graders *.py
+recursive-include utils *.py
+recursive-include tests *.py
