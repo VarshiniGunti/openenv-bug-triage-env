@@ -10,7 +10,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 
 from models.config import Config
@@ -21,8 +21,8 @@ from logging_config import get_logger
 # Initialize FastAPI app
 app = FastAPI(
     title="OpenEnv Bug Triage Environment",
-    description="AI-driven bug triage simulation environment",
-    version="1.0.0"
+    description="Bug triage simulation environment for agent evaluation",
+    version="1.0"
 )
 
 # Initialize logger
@@ -47,29 +47,41 @@ class InferenceResponse(BaseModel):
     data: Optional[Dict[str, Any]] = None
 
 
+@app.on_event("startup")
+def startup_event():
+    """Log startup event."""
+    print("OpenEnv Bug Triage Environment Started")
+    logger.info("FastAPI server started successfully")
+
+
 @app.get("/")
-async def root():
+def root():
     """Root endpoint - returns service status."""
-    return JSONResponse({
+    return {
         "message": "OpenEnv Bug Triage Environment Running",
         "status": "ok",
-        "version": "1.0.0",
+        "version": "1.0",
         "endpoints": {
             "health": "/health",
             "reset": "/reset",
             "step": "/step",
-            "infer": "/infer"
+            "infer": "/infer",
+            "state": "/state",
+            "docs": "/docs"
         }
-    })
+    }
 
 
 @app.get("/health")
-async def health():
+def health():
     """Health check endpoint."""
-    return JSONResponse({
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat()
-    })
+    return {"status": "healthy"}
+
+
+@app.get("/docs_redirect")
+def docs_redirect():
+    """Redirect to API documentation."""
+    return RedirectResponse(url="/docs")
 
 
 @app.post("/reset")
@@ -84,14 +96,14 @@ async def reset(task: str = "easy"):
         
         logger.info(f"Environment reset: task={task}")
         
-        return JSONResponse({
+        return {
             "status": "success",
             "observation": {
                 "bug_report": observation.bug_report,
                 "repo_modules": observation.repo_modules,
                 "previous_actions": observation.previous_actions
             }
-        })
+        }
     except Exception as e:
         logger.error(f"Reset failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -116,7 +128,7 @@ async def step(request: InferenceRequest):
         
         logger.info(f"Step executed: reward={reward:.2f}, done={done}")
         
-        return JSONResponse({
+        return {
             "status": "success",
             "reward": reward,
             "done": done,
@@ -126,7 +138,7 @@ async def step(request: InferenceRequest):
                 "previous_actions": observation.previous_actions
             },
             "info": info
-        })
+        }
     except Exception as e:
         logger.error(f"Step failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -171,13 +183,13 @@ async def infer(request: InferenceRequest):
         
         logger.info(f"Inference completed: total_reward={total_reward:.2f}")
         
-        return JSONResponse({
+        return {
             "status": "success",
             "task": request.task,
             "total_reward": total_reward,
             "steps": steps_data,
             "success": total_reward > 0.0
-        })
+        }
     except Exception as e:
         logger.error(f"Inference failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -193,10 +205,10 @@ async def state():
     
     try:
         state_data = env_instance.state()
-        return JSONResponse({
+        return {
             "status": "success",
             "state": state_data
-        })
+        }
     except Exception as e:
         logger.error(f"State retrieval failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
