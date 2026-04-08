@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  bug_triage_env:
+    build: .
+    container_name: bug_triage_env
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8000:8000"
+    command: python -m bug_triage_env.scripts.inference --task easy --model gpt-3.5-turbo
