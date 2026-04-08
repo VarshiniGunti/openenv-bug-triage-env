@@ -4,6 +4,9 @@ emoji: 🤖
 colorFrom: blue
 colorTo: purple
 sdk: docker
+sdk_version: "latest"
+python_version: "3.11"
+app_file: env.py
 pinned: false
 ---
 
@@ -428,43 +431,42 @@ The inference script produces structured logs:
 ├── inference.py              # OpenAI-compatible inference script
 ├── verify.py                 # Environment verification utilities
 ├── verify_submission.py      # Hackathon submission validator
+├── requirements.txt          # Python dependencies
+├── Dockerfile                # Docker configuration
+├── docker-compose.yml        # Docker Compose configuration
+├── openenv.yaml              # OpenEnv configuration
+├── API.md                    # Detailed API documentation
+├── README.md                 # This file
 │
 ├── models/                   # Pydantic data models
 │   ├── __init__.py
-│   ├── action.py            # BugAction model
-│   ├── observation.py       # BugObservation model
-│   ├── scenario.py          # BugScenario model
-│   └── config.py            # Config model
+│   ├── action.py             # BugAction model
+│   ├── observation.py        # BugObservation model
+│   ├── scenario.py           # BugScenario model
+│   └── config.py             # Config model
 │
 ├── tasks/                    # Task datasets
 │   ├── __init__.py
-│   ├── easy_task.py         # 14 easy scenarios
-│   ├── medium_task.py       # 14 medium scenarios
-│   └── hard_task.py         # 14 hard scenarios
+│   ├── easy_task.py          # 14 easy scenarios
+│   ├── medium_task.py        # 14 medium scenarios
+│   └── hard_task.py          # 14 hard scenarios
 │
 ├── graders/                  # Grading logic
 │   ├── __init__.py
-│   ├── easy_grader.py       # Easy task grader
-│   ├── medium_grader.py     # Medium task grader
-│   └── hard_grader.py       # Hard task grader (semantic evaluation)
+│   ├── easy_grader.py        # Easy task grader
+│   ├── medium_grader.py      # Medium task grader
+│   └── hard_grader.py        # Hard task grader (semantic evaluation)
 │
 ├── utils/                    # Utility functions
 │   ├── __init__.py
-│   └── normalization.py     # Action normalization utilities
+│   └── normalization.py      # Action normalization utilities
 │
-├── tests/                    # Test suite
-│   ├── __init__.py
-│   ├── test_env.py          # Environment tests
-│   ├── test_graders.py      # Grader tests
-│   ├── test_models.py       # Model tests
-│   └── test_normalization.py # Normalization tests
-│
-├── requirements.txt          # Python dependencies
-├── Dockerfile               # Docker configuration
-├── docker-compose.yml       # Docker Compose configuration
-├── openenv.yaml             # OpenEnv configuration
-├── API.md                   # Detailed API documentation
-└── README.md                # This file
+└── tests/                    # Test suite
+    ├── __init__.py
+    ├── test_env.py           # Environment tests
+    ├── test_graders.py       # Grader tests
+    ├── test_models.py        # Model tests
+    └── test_normalization.py # Normalization tests
 ```
 
 ## 📊 Performance Metrics
