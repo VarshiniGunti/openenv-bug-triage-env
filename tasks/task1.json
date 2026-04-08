@@ -1,0 +1,20 @@
+{
+  "id": "task_1",
+  "name": "Authentication Bug Classification",
+  "description": "Classify a bug in the authentication module",
+  "difficulty": "easy",
+  "input": {
+    "bug_report": "Login fails for users with special characters in their password",
+    "modules": ["auth.py", "validation.py", "security.py", "utils.py"]
+  },
+  "expected_output": {
+    "bug_type": "authentication",
+    "file": "auth.py",
+    "fix": "Add proper escaping for special characters in password validation"
+  },
+  "metadata": {
+    "category": "authentication",
+    "severity": "high",
+    "tags": ["security", "input-validation"]
+  }
+}

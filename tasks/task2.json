@@ -1,0 +1,20 @@
+{
+  "id": "task_2",
+  "name": "Database Connection Bug",
+  "description": "Identify and fix a database connection issue",
+  "difficulty": "medium",
+  "input": {
+    "bug_report": "API returns timeout errors when database is under heavy load",
+    "modules": ["db_connection.py", "query_builder.py", "cache.py", "connection_pool.py", "monitoring.py"]
+  },
+  "expected_output": {
+    "bug_type": "database",
+    "file": "connection_pool.py",
+    "fix": "Implement connection pooling with configurable timeout and retry logic"
+  },
+  "metadata": {
+    "category": "database",
+    "severity": "critical",
+    "tags": ["performance", "reliability"]
+  }
+}

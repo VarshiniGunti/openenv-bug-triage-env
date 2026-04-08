@@ -1,0 +1,20 @@
+{
+  "id": "task_3",
+  "name": "Memory Leak Detection",
+  "description": "Detect and fix a memory leak in the application",
+  "difficulty": "hard",
+  "input": {
+    "bug_report": "Application memory usage grows continuously over time, eventually causing out-of-memory errors",
+    "modules": ["memory_manager.py", "cache_handler.py", "event_listener.py", "resource_pool.py", "cleanup.py", "monitoring.py"]
+  },
+  "expected_output": {
+    "bug_type": "memory",
+    "file": "cache_handler.py",
+    "fix": "Implement proper cache eviction policy with TTL and add cleanup handlers for event listeners"
+  },
+  "metadata": {
+    "category": "memory",
+    "severity": "critical",
+    "tags": ["performance", "reliability", "resource-management"]
+  }
+}

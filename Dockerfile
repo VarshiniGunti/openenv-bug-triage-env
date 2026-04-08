@@ -8,14 +8,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY requirements.txt .
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy source code
+# Copy repository
 COPY . .
+
+# Install Python dependencies using pip install -e .
+RUN pip install --no-cache-dir -e .
 
 # Create logs directory
 RUN mkdir -p logs
@@ -28,4 +25,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:7860/health || exit 1
 
 # Run OpenEnv server
-CMD ["python", "env.py", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["python", "inference.py", "--host", "0.0.0.0", "--port", "7860"]
