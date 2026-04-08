@@ -1,3 +1,12 @@
+---
+title: OpenEnv Bug Triage Environment
+emoji: 🤖
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 # OpenEnv Bug Triage Environment
 
 ![OpenEnv](https://img.shields.io/badge/OpenEnv-Compatible-blue)
