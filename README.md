@@ -479,7 +479,7 @@ Logs are saved to `logs/` directory with ISO 8601 timestamps.
 
 - **API Documentation**: See [API.md](API.md) for detailed API reference
 - **OpenEnv Specification**: https://github.com/openenv/openenv
-- **Hackathon Details**: https://www.meta.com/openenv-hackathon
+- **Hackathon Details**: [https://www.meta.com/openenv-hackathon](https://www.scaler.com/school-of-technology/meta-pytorch-hackathon)
 
 ## 📄 License
 
@@ -492,7 +492,6 @@ For issues, questions, or contributions:
 1. Check existing documentation in [API.md](API.md)
 2. Review test cases in `tests/` directory
 3. Open an issue on GitHub
-4. Contact the development team
 
 ## 🎓 Citation
 
@@ -507,8 +506,6 @@ If you use this environment in your research, please cite:
 }
 ```
 
----
 
-**Status**: Ready for Meta × OpenEnv Hackathon Submission
 
-**Last Updated**: April 2024
+
