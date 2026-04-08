@@ -22,7 +22,10 @@ from logging_config import get_logger
 app = FastAPI(
     title="OpenEnv Bug Triage Environment",
     description="Bug triage simulation environment for agent evaluation",
-    version="1.0"
+    version="1.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # Initialize logger
