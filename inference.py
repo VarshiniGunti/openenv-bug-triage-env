@@ -85,24 +85,28 @@ def docs_redirect():
 
 
 @app.post("/reset")
-async def reset(task: str = "easy"):
+async def reset():
     """Reset the environment and start a new episode."""
     global env_instance
     
     try:
-        config = Config(task=task, max_steps=3)
+        config = Config(task="easy", max_steps=3)
         env_instance = BugTriageEnv(config)
         observation = env_instance.reset()
         
-        logger.info(f"Environment reset: task={task}")
+        # Ensure JSON serializable
+        if hasattr(observation, "model_dump"):
+            observation = observation.model_dump()
+        elif hasattr(observation, "dict"):
+            observation = observation.dict()
+        elif hasattr(observation, "__dict__"):
+            observation = observation.__dict__
+        
+        logger.info("Environment reset: task=easy")
         
         return {
-            "status": "success",
-            "observation": {
-                "bug_report": observation.bug_report,
-                "repo_modules": observation.repo_modules,
-                "previous_actions": observation.previous_actions
-            }
+            "observation": observation,
+            "info": {}
         }
     except Exception as e:
         logger.error(f"Reset failed: {e}")
@@ -110,7 +114,7 @@ async def reset(task: str = "easy"):
 
 
 @app.post("/step")
-async def step(request: InferenceRequest):
+async def step(action: dict = {}):
     """Execute one step in the environment."""
     global env_instance
     
@@ -118,26 +122,29 @@ async def step(request: InferenceRequest):
         raise HTTPException(status_code=400, detail="Environment not initialized. Call /reset first.")
     
     try:
-        action = BugAction(
-            bug_type=request.bug_type or "logic",
-            file=request.file or "main.py",
-            fix=request.fix or "Fix the issue"
+        bug_action = BugAction(
+            bug_type=action.get("bug_type") or "logic",
+            file=action.get("file") or "main.py",
+            fix=action.get("fix") or "Fix the issue"
         )
         
-        observation, reward, done, info = env_instance.step(action)
+        observation, reward, done, info = env_instance.step(bug_action)
+        
+        # Ensure JSON serializable
+        if hasattr(observation, "model_dump"):
+            observation = observation.model_dump()
+        elif hasattr(observation, "dict"):
+            observation = observation.dict()
+        elif hasattr(observation, "__dict__"):
+            observation = observation.__dict__
         
         logger.info(f"Step executed: reward={reward:.2f}, done={done}")
         
         return {
-            "status": "success",
-            "reward": reward,
-            "done": done,
-            "observation": {
-                "bug_report": observation.bug_report,
-                "repo_modules": observation.repo_modules,
-                "previous_actions": observation.previous_actions
-            },
-            "info": info
+            "observation": observation,
+            "reward": float(reward),
+            "done": bool(done),
+            "info": info or {}
         }
     except Exception as e:
         logger.error(f"Step failed: {e}")

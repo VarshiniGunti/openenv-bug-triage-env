@@ -1,5 +1,5 @@
-name: bug_triage_env
-description: Multi-step bug triage environment where an AI agent classifies bugs, identifies affected modules, and proposes fixes.
-task: easy
+name: openenv-bug-triage-env
+description: Bug triage simulation environment for evaluating autonomous agents
+entrypoint: inference.py
 max_steps: 3
 seed: null
