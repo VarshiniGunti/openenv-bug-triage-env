@@ -1,8 +1,9 @@
 {
-  "id": "task_1",
+  "id": "easy_bug",
   "name": "Authentication Bug Classification",
-  "description": "Classify a bug in the authentication module",
+  "description": "Identify and fix a simple bug",
   "difficulty": "easy",
+  "grader": "graders.easy_grader.EasyGrader",
   "input": {
     "bug_report": "Login fails for users with special characters in their password",
     "modules": ["auth.py", "validation.py", "security.py", "utils.py"]

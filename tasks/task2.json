@@ -1,8 +1,9 @@
 {
-  "id": "task_2",
+  "id": "medium_bug",
   "name": "Database Connection Bug",
-  "description": "Identify and fix a database connection issue",
+  "description": "Identify and fix a medium bug",
   "difficulty": "medium",
+  "grader": "graders.medium_grader.MediumGrader",
   "input": {
     "bug_report": "API returns timeout errors when database is under heavy load",
     "modules": ["db_connection.py", "query_builder.py", "cache.py", "connection_pool.py", "monitoring.py"]
