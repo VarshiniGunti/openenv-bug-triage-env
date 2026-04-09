@@ -3,3 +3,38 @@ description: Bug triage simulation environment for evaluating autonomous agents
 entrypoint: inference.py
 max_steps: 3
 seed: null
+
+tasks:
+  - id: task_1
+    name: Authentication Bug Classification
+    description: Classify a bug in the authentication module
+    difficulty: easy
+    grader: EasyGrader
+    grader_class: graders.easy_grader.EasyGrader
+    
+  - id: task_2
+    name: Database Connection Bug
+    description: Identify and fix a database connection issue
+    difficulty: medium
+    grader: MediumGrader
+    grader_class: graders.medium_grader.MediumGrader
+    
+  - id: task_3
+    name: Memory Leak Detection
+    description: Detect and fix a memory leak in the application
+    difficulty: hard
+    grader: HardGrader
+    grader_class: graders.hard_grader.HardGrader
+
+graders:
+  - name: EasyGrader
+    class: graders.easy_grader.EasyGrader
+    description: Grader for easy-level bug triage tasks
+    
+  - name: MediumGrader
+    class: graders.medium_grader.MediumGrader
+    description: Grader for medium-level bug triage tasks
+    
+  - name: HardGrader
+    class: graders.hard_grader.HardGrader
+    description: Grader for hard-level bug triage tasks
