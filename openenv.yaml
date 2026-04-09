@@ -3,3 +3,26 @@ description: Bug triage simulation environment for evaluating autonomous agents
 entrypoint: inference.py
 max_steps: 3
 seed: null
+tasks:
+  - id: task_1
+    name: easy
+    grader: graders.easy_grader.EasyGrader
+    scenarios: 14
+  - id: task_2
+    name: medium
+    grader: graders.medium_grader.MediumGrader
+    scenarios: 14
+  - id: task_3
+    name: hard
+    grader: graders.hard_grader.HardGrader
+    scenarios: 14
+graders:
+  - name: EasyGrader
+    module: graders.easy_grader
+    class: EasyGrader
+  - name: MediumGrader
+    module: graders.medium_grader
+    class: MediumGrader
+  - name: HardGrader
+    module: graders.hard_grader
+    class: HardGrader

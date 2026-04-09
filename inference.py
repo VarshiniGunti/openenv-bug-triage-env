@@ -221,6 +221,47 @@ async def tasks():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/graders")
+async def graders():
+    """Get all available graders."""
+    try:
+        from graders import EasyGrader, MediumGrader, HardGrader
+        
+        graders_list = [
+            {
+                "id": "easy_grader",
+                "name": "EasyGrader",
+                "module": "graders.easy_grader",
+                "class": "EasyGrader",
+                "description": "Evaluates bug_type classification"
+            },
+            {
+                "id": "medium_grader",
+                "name": "MediumGrader",
+                "module": "graders.medium_grader",
+                "class": "MediumGrader",
+                "description": "Evaluates bug_type and file location"
+            },
+            {
+                "id": "hard_grader",
+                "name": "HardGrader",
+                "module": "graders.hard_grader",
+                "class": "HardGrader",
+                "description": "Evaluates bug_type, file, and fix with semantic matching"
+            }
+        ]
+        
+        return {
+            "status": "success",
+            "graders": graders_list,
+            "total_graders": len(graders_list),
+            "graders_available": True
+        }
+    except Exception as e:
+        logger.error(f"Graders retrieval failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/evaluate")
 async def evaluate(task: str = "easy", num_episodes: int = 5):
     """Run evaluation with baseline agent."""
