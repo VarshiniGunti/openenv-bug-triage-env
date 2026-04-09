@@ -107,31 +107,31 @@ class HardGrader:
             ground_truth_fix: The ground truth fix
             
         Returns:
-            Combined score in [0.0, 1.0]
+            Combined score strictly between 0 and 1 (exclusive)
         """
         # Step 1: Check for keyword match
         has_keywords = self.keyword_match(action_fix, ground_truth_fix)
         
         if has_keywords:
-            # Keyword match found - return 0.4 (will be scaled to 0.4 * 0.4 = 0.16 in grade())
-            return 1.0
+            # Keyword match found - return 0.95 (will be scaled to 0.4 * 0.95 = 0.38 in grade())
+            return 0.95
         
         # Step 2: Check semantic similarity for partial credit
         semantic_score = self.semantic_match(action_fix, ground_truth_fix)
         
         if semantic_score >= 0.65:
-            # High semantic similarity - return 0.3 (will be scaled to 0.4 * 0.3 = 0.12 in grade())
+            # High semantic similarity - return 0.75 (will be scaled to 0.4 * 0.75 = 0.30 in grade())
             return 0.75
         elif semantic_score >= 0.45:
-            # Medium semantic similarity - return 0.2 (will be scaled to 0.4 * 0.2 = 0.08 in grade())
+            # Medium semantic similarity - return 0.5 (will be scaled to 0.4 * 0.5 = 0.20 in grade())
             return 0.5
         elif semantic_score >= 0.35:
-            # Reasoning credit - return 0.25 (will be scaled to 0.4 * 0.25 = 0.1 in grade())
+            # Reasoning credit - return 0.25 (will be scaled to 0.4 * 0.25 = 0.10 in grade())
             # This rewards agents for showing understanding even if fix isn't perfect
             return 0.25
         else:
-            # Low similarity - no credit
-            return 0.0
+            # Low similarity - minimal credit
+            return 0.05
     
     def grade(self, action: BugAction, scenario: BugScenario, step: int) -> float:
         """
@@ -143,24 +143,24 @@ class HardGrader:
             step: The current step (1, 2, or 3)
             
         Returns:
-            Reward value (0.0 to 0.4 depending on step)
+            Reward value strictly between 0 and 1 (exclusive)
         """
         if step == 1:
             # Step 1: Evaluate bug_type
             if action.bug_type == scenario.ground_truth_type:
-                return 0.3
+                return 0.35  # Strictly between 0 and 1
             else:
-                return 0.0
+                return 0.05  # Strictly between 0 and 1
         elif step == 2:
             # Step 2: Evaluate file
             if action.file == scenario.ground_truth_file:
-                return 0.3
+                return 0.35  # Strictly between 0 and 1
             else:
-                return 0.0
+                return 0.05  # Strictly between 0 and 1
         elif step == 3:
             # Step 3: Evaluate fix using combined semantic + keyword matching
             match_score = self.combined_fix_match(action.fix, scenario.ground_truth_fix)
-            # Scale match score to 0.4 reward range
-            return 0.4 * match_score
+            # Scale match score to range (0.05, 0.95) to stay strictly between 0 and 1
+            return 0.05 + (0.9 * match_score)
         else:
-            return 0.0
+            return 0.05

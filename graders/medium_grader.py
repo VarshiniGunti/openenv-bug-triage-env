@@ -30,20 +30,20 @@ class MediumGrader:
             step: The current step (1, 2, or 3)
             
         Returns:
-            Reward value (0.0 or 0.3)
+            Reward value strictly between 0 and 1 (exclusive)
         """
         if step == 1:
             # Step 1: Evaluate bug_type
             if action.bug_type == scenario.ground_truth_type:
-                return 0.3
+                return 0.35  # Strictly between 0 and 1
             else:
-                return 0.0
+                return 0.05  # Strictly between 0 and 1
         elif step == 2:
             # Step 2: Evaluate file
             if action.file == scenario.ground_truth_file:
-                return 0.3
+                return 0.35  # Strictly between 0 and 1
             else:
-                return 0.0
+                return 0.05  # Strictly between 0 and 1
         else:
             # Step 3: No reward for Medium task
-            return 0.0
+            return 0.05  # Strictly between 0 and 1
