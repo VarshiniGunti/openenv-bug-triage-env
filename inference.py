@@ -2,6 +2,7 @@
 
 import os
 import sys
+import yaml
 from typing import Optional
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -16,6 +17,27 @@ try:
     from core.logging_config import get_logger
 except ImportError:
     from logging_config import get_logger
+
+# Print working directory for debugging
+print(f"Current working dir: {os.getcwd()}", flush=True)
+
+# Load OpenEnv configuration
+def load_openenv_config():
+    """Load openenv.yaml configuration from repo root."""
+    path = os.path.join(os.getcwd(), "openenv.yaml")
+    try:
+        with open(path, "r") as f:
+            config = yaml.safe_load(f)
+        print(f"Loaded OpenEnv config from {path}", flush=True)
+        return config
+    except Exception as e:
+        print(f"Warning: Could not load openenv.yaml from {path}: {e}", flush=True)
+        return None
+
+# Load config at startup
+OPENENV_CONFIG = load_openenv_config()
+if OPENENV_CONFIG:
+    print(f"Loaded OpenEnv config: {OPENENV_CONFIG}", flush=True)
 
 app = FastAPI(
     title="OpenEnv Bug Triage Environment",
