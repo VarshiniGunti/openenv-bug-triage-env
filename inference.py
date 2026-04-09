@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from models.config import Config
 from models.action import BugAction
 from environment.env import BugTriageEnv
-from logging_config import get_logger
+from core.logging_config import get_logger
 
 # Initialize FastAPI app
 app = FastAPI(
