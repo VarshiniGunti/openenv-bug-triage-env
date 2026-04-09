@@ -10,3 +10,11 @@ tasks:
   - id: hard_bug
     file: tasks/task3.json
     grader: graders.hard_grader.HardGrader
+
+graders:
+  - name: EasyGrader
+    class: graders.easy_grader.EasyGrader
+  - name: MediumGrader
+    class: graders.medium_grader.MediumGrader
+  - name: HardGrader
+    class: graders.hard_grader.HardGrader
