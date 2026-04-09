@@ -145,6 +145,35 @@ async def tasks():
     """Get available tasks with their graders."""
     try:
         from graders import EasyGrader, MediumGrader, HardGrader
+        from tasks import EASY_SCENARIOS, MEDIUM_SCENARIOS, HARD_SCENARIOS
+        from models.action import BugAction
+        from models.scenario import BugScenario
+        
+        # Verify graders are working by testing them
+        easy_grader = EasyGrader()
+        medium_grader = MediumGrader()
+        hard_grader = HardGrader()
+        
+        # Test graders with sample scenarios
+        easy_scenario = BugScenario(**EASY_SCENARIOS[0])
+        medium_scenario = BugScenario(**MEDIUM_SCENARIOS[0])
+        hard_scenario = BugScenario(**HARD_SCENARIOS[0])
+        
+        test_action = BugAction(
+            bug_type="null_pointer",
+            file="auth.py",
+            fix="Add null check"
+        )
+        
+        # Verify graders return valid scores
+        easy_score = easy_grader.grade(test_action, easy_scenario, 1)
+        medium_score = medium_grader.grade(test_action, medium_scenario, 1)
+        hard_score = hard_grader.grade(test_action, hard_scenario, 1)
+        
+        # Verify scores are in valid range (0, 1) exclusive
+        assert 0 < easy_score < 1, f"Easy grader score {easy_score} not in (0, 1)"
+        assert 0 < medium_score < 1, f"Medium grader score {medium_score} not in (0, 1)"
+        assert 0 < hard_score < 1, f"Hard grader score {hard_score} not in (0, 1)"
         
         tasks_list = [
             {
@@ -152,21 +181,27 @@ async def tasks():
                 "name": "Authentication Bug Classification",
                 "difficulty": "easy",
                 "grader": "EasyGrader",
-                "grader_class": "graders.easy_grader.EasyGrader"
+                "grader_class": "graders.easy_grader.EasyGrader",
+                "scenarios": len(EASY_SCENARIOS),
+                "test_score": float(easy_score)
             },
             {
                 "id": "task_2",
                 "name": "Database Connection Bug",
                 "difficulty": "medium",
                 "grader": "MediumGrader",
-                "grader_class": "graders.medium_grader.MediumGrader"
+                "grader_class": "graders.medium_grader.MediumGrader",
+                "scenarios": len(MEDIUM_SCENARIOS),
+                "test_score": float(medium_score)
             },
             {
                 "id": "task_3",
                 "name": "Memory Leak Detection",
                 "difficulty": "hard",
                 "grader": "HardGrader",
-                "grader_class": "graders.hard_grader.HardGrader"
+                "grader_class": "graders.hard_grader.HardGrader",
+                "scenarios": len(HARD_SCENARIOS),
+                "test_score": float(hard_score)
             }
         ]
         
@@ -174,6 +209,7 @@ async def tasks():
             "status": "success",
             "tasks": tasks_list,
             "total_tasks": len(tasks_list),
+            "graders_verified": True,
             "graders_available": {
                 "easy": "EasyGrader",
                 "medium": "MediumGrader",
