@@ -3,7 +3,7 @@
 import random
 import sys
 import os
-from typing import Tuple, Dict, Any, Optional
+from typing import Tuple, Dict, Any, Optional, List
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,6 +19,63 @@ try:
 except ImportError:
     from logging_config import get_logger
 from utils.normalization import normalize_bug_type, normalize_file, normalize_fix_text
+
+
+# Task definitions for validator discovery
+TASKS = [
+    {
+        "id": "task_1",
+        "name": "Authentication Bug Classification",
+        "description": "Classify a bug in the authentication module",
+        "difficulty": "easy",
+        "grader": "EasyGrader",
+        "grader_class": "graders.easy_grader.EasyGrader"
+    },
+    {
+        "id": "task_2",
+        "name": "Database Connection Bug",
+        "description": "Identify and fix a database connection issue",
+        "difficulty": "medium",
+        "grader": "MediumGrader",
+        "grader_class": "graders.medium_grader.MediumGrader"
+    },
+    {
+        "id": "task_3",
+        "name": "Memory Leak Detection",
+        "description": "Detect and fix a memory leak in the application",
+        "difficulty": "hard",
+        "grader": "HardGrader",
+        "grader_class": "graders.hard_grader.HardGrader"
+    }
+]
+
+GRADERS = [
+    {
+        "name": "EasyGrader",
+        "class": "graders.easy_grader.EasyGrader",
+        "description": "Grader for easy-level bug triage tasks"
+    },
+    {
+        "name": "MediumGrader",
+        "class": "graders.medium_grader.MediumGrader",
+        "description": "Grader for medium-level bug triage tasks"
+    },
+    {
+        "name": "HardGrader",
+        "class": "graders.hard_grader.HardGrader",
+        "description": "Grader for hard-level bug triage tasks"
+    }
+]
+
+
+def get_tasks() -> List[Dict[str, Any]]:
+    """Get all available tasks with graders."""
+    return TASKS
+
+
+def get_graders() -> List[Dict[str, Any]]:
+    """Get all available graders."""
+    return GRADERS
 
 
 class BugTriageEnv:

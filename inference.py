@@ -144,10 +144,14 @@ async def state():
 async def tasks():
     """Get available tasks with their graders."""
     try:
+        from environment.env import get_tasks, get_graders
         from graders import EasyGrader, MediumGrader, HardGrader
         from tasks import EASY_SCENARIOS, MEDIUM_SCENARIOS, HARD_SCENARIOS
         from models.action import BugAction
         from models.scenario import BugScenario
+        
+        # Get task definitions
+        tasks_list = get_tasks()
         
         # Verify graders are working by testing them
         easy_grader = EasyGrader()
@@ -175,35 +179,17 @@ async def tasks():
         assert 0 < medium_score < 1, f"Medium grader score {medium_score} not in (0, 1)"
         assert 0 < hard_score < 1, f"Hard grader score {hard_score} not in (0, 1)"
         
-        tasks_list = [
-            {
-                "id": "task_1",
-                "name": "Authentication Bug Classification",
-                "difficulty": "easy",
-                "grader": "EasyGrader",
-                "grader_class": "graders.easy_grader.EasyGrader",
-                "scenarios": len(EASY_SCENARIOS),
-                "test_score": float(easy_score)
-            },
-            {
-                "id": "task_2",
-                "name": "Database Connection Bug",
-                "difficulty": "medium",
-                "grader": "MediumGrader",
-                "grader_class": "graders.medium_grader.MediumGrader",
-                "scenarios": len(MEDIUM_SCENARIOS),
-                "test_score": float(medium_score)
-            },
-            {
-                "id": "task_3",
-                "name": "Memory Leak Detection",
-                "difficulty": "hard",
-                "grader": "HardGrader",
-                "grader_class": "graders.hard_grader.HardGrader",
-                "scenarios": len(HARD_SCENARIOS),
-                "test_score": float(hard_score)
-            }
-        ]
+        # Add test scores to tasks
+        for task in tasks_list:
+            if task["difficulty"] == "easy":
+                task["test_score"] = float(easy_score)
+                task["scenarios"] = len(EASY_SCENARIOS)
+            elif task["difficulty"] == "medium":
+                task["test_score"] = float(medium_score)
+                task["scenarios"] = len(MEDIUM_SCENARIOS)
+            elif task["difficulty"] == "hard":
+                task["test_score"] = float(hard_score)
+                task["scenarios"] = len(HARD_SCENARIOS)
         
         return {
             "status": "success",
@@ -225,31 +211,9 @@ async def tasks():
 async def graders():
     """Get all available graders."""
     try:
-        from graders import EasyGrader, MediumGrader, HardGrader
+        from environment.env import get_graders
         
-        graders_list = [
-            {
-                "id": "easy_grader",
-                "name": "EasyGrader",
-                "module": "graders.easy_grader",
-                "class": "EasyGrader",
-                "description": "Evaluates bug_type classification"
-            },
-            {
-                "id": "medium_grader",
-                "name": "MediumGrader",
-                "module": "graders.medium_grader",
-                "class": "MediumGrader",
-                "description": "Evaluates bug_type and file location"
-            },
-            {
-                "id": "hard_grader",
-                "name": "HardGrader",
-                "module": "graders.hard_grader",
-                "class": "HardGrader",
-                "description": "Evaluates bug_type, file, and fix with semantic matching"
-            }
-        ]
+        graders_list = get_graders()
         
         return {
             "status": "success",
