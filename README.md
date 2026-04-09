@@ -512,6 +512,10 @@ The HuggingFace Space has been tested and verified to be fully functional. All A
 - **Space**: https://huggingface.co/spaces/Varshini28/openenv-bug-triage-env
 - **API Endpoint**: https://Varshini28-openenv-bug-triage-env.hf.space
 
+### Space Status
+![Space Running](https://img.shields.io/badge/Space-Running-brightgreen)
+![API Status](https://img.shields.io/badge/API-Healthy-brightgreen)
+
 ### Endpoint Test Results
 
 | Endpoint | Method | Status | Response |
@@ -520,6 +524,30 @@ The HuggingFace Space has been tested and verified to be fully functional. All A
 | `/reset` | POST | ✅ 200 OK | Valid observation with bug report and module list |
 | `/step` | POST | ✅ 200 OK | Reward calculation, action tracking, episode state |
 | `/state` | POST | ✅ 200 OK | Current environment state |
+
+### Sample API Response - Root Endpoint
+
+**Request:**
+```bash
+curl https://Varshini28-openenv-bug-triage-env.hf.space/
+```
+
+**Response:**
+```json
+{
+  "message": "OpenEnv Bug Triage Environment Running",
+  "status": "ok",
+  "version": "1.0",
+  "endpoints": {
+    "health": "/health",
+    "reset": "/reset",
+    "step": "/step",
+    "infer": "/infer",
+    "state": "/state",
+    "docs": "/docs"
+  }
+}
+```
 
 ### Sample API Response - `/reset` Endpoint
 
