@@ -2,13 +2,13 @@ entrypoint: inference.py
 
 tasks:
   - id: easy_bug
-    path: tasks/task1.json
+    file: tasks/task1.json
     grader: easy_grader
   - id: medium_bug
-    path: tasks/task2.json
+    file: tasks/task2.json
     grader: medium_grader
   - id: hard_bug
-    path: tasks/task3.json
+    file: tasks/task3.json
     grader: hard_grader
 
 graders:
