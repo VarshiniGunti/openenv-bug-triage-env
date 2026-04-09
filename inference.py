@@ -317,6 +317,20 @@ else:
     
     client = OpenAI(api_key=api_key, base_url=api_base_url)
     
+    # Print task information for validator
+    try:
+        from environment.env import get_tasks, get_graders
+        tasks_list = get_tasks()
+        graders_list = get_graders()
+        print(f"[TASKS] count={len(tasks_list)}", flush=True)
+        for task in tasks_list:
+            print(f"[TASK] id={task['id']} name={task['name']} difficulty={task['difficulty']} grader={task['grader']}", flush=True)
+        print(f"[GRADERS] count={len(graders_list)}", flush=True)
+        for grader in graders_list:
+            print(f"[GRADER] name={grader['name']} class={grader['class']}", flush=True)
+    except Exception as e:
+        print(f"[WARNING] Could not load tasks: {e}", flush=True)
+    
     print(f"[START] task={args.task} env=openenv-bug-triage-env model=gpt-3.5-turbo", flush=True)
     
     try:
