@@ -1,31 +1,20 @@
-name: openenv-bug-triage-env
-description: Bug triage simulation environment for evaluating autonomous agents
 entrypoint: inference.py
-max_steps: 3
-seed: null
 
 tasks:
   - id: easy_bug
-    file: tasks/task1.json
-    grader: graders.easy_grader.EasyGrader
-    
+    path: tasks/task1.json
+    grader: easy_grader
   - id: medium_bug
-    file: tasks/task2.json
-    grader: graders.medium_grader.MediumGrader
-    
+    path: tasks/task2.json
+    grader: medium_grader
   - id: hard_bug
-    file: tasks/task3.json
-    grader: graders.hard_grader.HardGrader
+    path: tasks/task3.json
+    grader: hard_grader
 
 graders:
-  - name: EasyGrader
-    class: graders.easy_grader.EasyGrader
-    description: Grader for easy-level bug triage tasks
-    
-  - name: MediumGrader
-    class: graders.medium_grader.MediumGrader
-    description: Grader for medium-level bug triage tasks
-    
-  - name: HardGrader
-    class: graders.hard_grader.HardGrader
-    description: Grader for hard-level bug triage tasks
+  easy_grader:
+    path: graders.easy_grader.EasyGrader
+  medium_grader:
+    path: graders.medium_grader.MediumGrader
+  hard_grader:
+    path: graders.hard_grader.HardGrader
