@@ -5,26 +5,17 @@ max_steps: 3
 seed: null
 
 tasks:
-  - id: task_1
-    name: Authentication Bug Classification
-    description: Classify a bug in the authentication module
-    difficulty: easy
-    grader: EasyGrader
-    grader_class: graders.easy_grader.EasyGrader
+  - id: easy_bug
+    file: tasks/task1.json
+    grader: graders.easy_grader.EasyGrader
     
-  - id: task_2
-    name: Database Connection Bug
-    description: Identify and fix a database connection issue
-    difficulty: medium
-    grader: MediumGrader
-    grader_class: graders.medium_grader.MediumGrader
+  - id: medium_bug
+    file: tasks/task2.json
+    grader: graders.medium_grader.MediumGrader
     
-  - id: task_3
-    name: Memory Leak Detection
-    description: Detect and fix a memory leak in the application
-    difficulty: hard
-    grader: HardGrader
-    grader_class: graders.hard_grader.HardGrader
+  - id: hard_bug
+    file: tasks/task3.json
+    grader: graders.hard_grader.HardGrader
 
 graders:
   - name: EasyGrader
