@@ -54,13 +54,6 @@ class InferenceResponse(BaseModel):
     data: Optional[Dict[str, Any]] = None
 
 
-@app.on_event("startup")
-def startup_event():
-    """Log startup event."""
-    print("OpenEnv Bug Triage Environment Started")
-    logger.info("FastAPI server started successfully")
-
-
 @app.get("/")
 def root():
     """Root endpoint - returns service status."""
@@ -227,16 +220,3 @@ async def state():
         logger.error(f"State retrieval failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
-if __name__ == "__main__":
-    import uvicorn
-    import argparse
-    
-    parser = argparse.ArgumentParser(description="Run OpenEnv Bug Triage inference server")
-    parser.add_argument("--host", default="0.0.0.0", help="Server host")
-    parser.add_argument("--port", type=int, default=7860, help="Server port")
-    
-    args = parser.parse_args()
-    
-    logger.info(f"Starting FastAPI server on {args.host}:{args.port}")
-    uvicorn.run(app, host=args.host, port=args.port)
