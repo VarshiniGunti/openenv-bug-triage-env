@@ -3,6 +3,8 @@
 import random
 import sys
 import os
+import json
+import importlib
 from typing import Tuple, Dict, Any, Optional
 
 # Add current directory to path for imports
@@ -16,6 +18,63 @@ from tasks import EASY_SCENARIOS, MEDIUM_SCENARIOS, HARD_SCENARIOS
 from graders import EasyGrader, MediumGrader, HardGrader
 from logging_config import get_logger
 from utils.normalization import normalize_bug_type, normalize_file, normalize_fix_text
+
+
+def load_grader(grader_path: str):
+    """
+    Dynamically load and instantiate a grader from a module path.
+    
+    Args:
+        grader_path: Full path to grader class (e.g., "graders.easy_grader.EasyGrader")
+        
+    Returns:
+        Instantiated grader object
+    """
+    try:
+        module_path, class_name = grader_path.rsplit(".", 1)
+        module = importlib.import_module(module_path)
+        grader_class = getattr(module, class_name)
+        return grader_class()
+    except Exception as e:
+        raise RuntimeError(f"Failed to load grader {grader_path}: {e}")
+
+
+def load_tasks_from_directory(tasks_dir: str = "tasks") -> Dict[str, Dict[str, Any]]:
+    """
+    Load all task definitions from JSON files in the tasks directory.
+    
+    Args:
+        tasks_dir: Directory containing task JSON files
+        
+    Returns:
+        Dictionary mapping task IDs to task definitions with loaded graders
+    """
+    tasks = {}
+    
+    # Get the absolute path to the tasks directory
+    if not os.path.isabs(tasks_dir):
+        tasks_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), tasks_dir)
+    
+    if not os.path.isdir(tasks_dir):
+        raise RuntimeError(f"Tasks directory not found: {tasks_dir}")
+    
+    # Load all JSON files from the tasks directory
+    for filename in sorted(os.listdir(tasks_dir)):
+        if filename.endswith(".json"):
+            filepath = os.path.join(tasks_dir, filename)
+            try:
+                with open(filepath, 'r') as f:
+                    task = json.load(f)
+                
+                # Load the grader if specified
+                if "grader" in task:
+                    task["grader_instance"] = load_grader(task["grader"])
+                
+                tasks[task["id"]] = task
+            except Exception as e:
+                raise RuntimeError(f"Failed to load task from {filepath}: {e}")
+    
+    return tasks
 
 
 class BugTriageEnv:
@@ -40,6 +99,9 @@ class BugTriageEnv:
         # Set random seed if provided
         if self.config.seed is not None:
             random.seed(self.config.seed)
+        
+        # Load tasks from directory with graders
+        self.tasks = load_tasks_from_directory()
         
         # Load scenarios based on task
         self.scenarios = self._load_scenarios()
@@ -78,15 +140,23 @@ class BugTriageEnv:
         return normalized_scenarios
     
     def _select_grader(self):
-        """Select grader based on configured task."""
-        if self.config.task == "easy":
-            return EasyGrader()
-        elif self.config.task == "medium":
-            return MediumGrader()
-        elif self.config.task == "hard":
-            return HardGrader()
-        else:
+        """Select grader based on configured task from loaded tasks."""
+        # Map task difficulty to task ID
+        task_id_map = {
+            "easy": "easy_bug",
+            "medium": "medium_bug",
+            "hard": "hard_bug"
+        }
+        
+        task_id = task_id_map.get(self.config.task)
+        if not task_id or task_id not in self.tasks:
             raise ValueError(f"Unknown task: {self.config.task}")
+        
+        task = self.tasks[task_id]
+        if "grader_instance" not in task:
+            raise RuntimeError(f"Task {task_id} does not have a grader instance")
+        
+        return task["grader_instance"]
     
     def _generate_module_descriptions(self, modules: list) -> dict:
         """
