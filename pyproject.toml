@@ -9,8 +9,12 @@ dependencies = [
     "pydantic>=2.0",
     "numpy>=1.24.0",
     "pyyaml>=6.0",
-    "scikit-learn>=1.0.0"
+    "scikit-learn>=1.0.0",
+    "openenv-core>=0.2.0"
 ]
+
+[project.scripts]
+server = "server.app:main"
 
 [build-system]
 requires = ["setuptools>=65", "wheel"]
@@ -18,4 +22,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["environment*", "models*", "utils*", "graders*", "tasks*", "core*"]
+include = ["environment*", "models*", "utils*", "graders*", "tasks*", "core*", "server*"]

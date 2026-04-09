@@ -1,0 +1,30 @@
+version = 1
+requires-python = ">=3.10"
+
+[[package]]
+name = "fastapi"
+version = "0.104.0"
+
+[[package]]
+name = "uvicorn"
+version = "0.24.0"
+
+[[package]]
+name = "pydantic"
+version = "2.0"
+
+[[package]]
+name = "numpy"
+version = "1.24.0"
+
+[[package]]
+name = "pyyaml"
+version = "6.0"
+
+[[package]]
+name = "scikit-learn"
+version = "1.0.0"
+
+[[package]]
+name = "openenv-core"
+version = "0.2.0"
