@@ -1,1 +1,5 @@
-{"id": "hard_bug", "input": "Application memory usage grows continuously over time, eventually causing out-of-memory errors", "expected_output": "Implement proper cache eviction policy with TTL and add cleanup handlers for event listeners"}
+{
+  "id": "hard_bug",
+  "input": "Application memory usage grows continuously over time, eventually causing out-of-memory errors",
+  "expected_output": "Implement proper cache eviction policy with TTL and add cleanup handlers for event listeners"
+}
