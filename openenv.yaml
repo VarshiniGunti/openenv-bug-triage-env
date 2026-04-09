@@ -3,18 +3,18 @@ entrypoint: inference.py
 tasks:
   - id: easy_bug
     file: tasks/task1.json
-    grader: graders.easy_grader.EasyGrader
+    grader: easy_grader
   - id: medium_bug
     file: tasks/task2.json
-    grader: graders.medium_grader.MediumGrader
+    grader: medium_grader
   - id: hard_bug
     file: tasks/task3.json
-    grader: graders.hard_grader.HardGrader
+    grader: hard_grader
 
 graders:
-  - name: EasyGrader
-    class: graders.easy_grader.EasyGrader
-  - name: MediumGrader
-    class: graders.medium_grader.MediumGrader
-  - name: HardGrader
-    class: graders.hard_grader.HardGrader
+  easy_grader:
+    path: graders.easy_grader.EasyGrader
+  medium_grader:
+    path: graders.medium_grader.MediumGrader
+  hard_grader:
+    path: graders.hard_grader.HardGrader
