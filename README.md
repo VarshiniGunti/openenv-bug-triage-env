@@ -427,11 +427,19 @@ The inference script produces structured logs:
 ├── pyproject.toml            # PEP 621 project configuration
 ├── README.md                 # This file
 ├── openenv.yaml              # OpenEnv configuration
-├── requirements.txt          # Python dependencies
+├── API.md                    # API documentation
+│
+├── core/                     # Core package with utilities
+│   ├── __init__.py
+│   ├── env.py               # BugTriageEnv class with reset/step/state
+│   ├── config_manager.py    # Configuration management
+│   ├── logging_config.py    # Logging setup
+│   ├── verify.py            # Environment verification script
+│   └── verify_submission.py # Submission verification script
 │
 ├── environment/              # OpenEnv environment implementation
 │   ├── __init__.py
-│   ├── env.py               # BugTriageEnv class with reset/step/state
+│   ├── env.py               # Environment wrapper
 │   └── grader.py            # Dynamic grader with variable scoring
 │
 ├── baseline/                 # Baseline agent
@@ -439,25 +447,33 @@ The inference script produces structured logs:
 │   └── baseline_agent.py     # Reference agent implementation
 │
 ├── tasks/                    # Task definitions
+│   ├── __init__.py
+│   ├── easy_task.py         # Easy task implementation
+│   ├── medium_task.py       # Medium task implementation
+│   ├── hard_task.py         # Hard task implementation
 │   ├── task1.json           # Easy task (authentication bug)
 │   ├── task2.json           # Medium task (database bug)
 │   └── task3.json           # Hard task (memory leak)
 │
 ├── models/                   # Pydantic data models
+│   ├── __init__.py
 │   ├── action.py             # BugAction model
 │   ├── observation.py        # BugObservation model
 │   ├── scenario.py           # BugScenario model
 │   └── config.py             # Config model
 │
 ├── graders/                  # Grading logic
+│   ├── __init__.py
 │   ├── easy_grader.py        # Easy task grader
 │   ├── medium_grader.py      # Medium task grader
 │   └── hard_grader.py        # Hard task grader
 │
 ├── utils/                    # Utility functions
+│   ├── __init__.py
 │   └── normalization.py      # Action normalization
 │
 └── tests/                    # Test suite
+    ├── __init__.py
     ├── test_env.py
     ├── test_graders.py
     ├── test_models.py
