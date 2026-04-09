@@ -54,12 +54,15 @@ def health():
 
 
 @app.post("/reset")
-async def reset():
+async def reset(task: str = "easy"):
     """Reset the environment and start a new episode."""
     global env_instance
     
     try:
-        config = Config(task="easy", max_steps=3)
+        if task not in ["easy", "medium", "hard"]:
+            raise ValueError(f"Invalid task: {task}. Must be 'easy', 'medium', or 'hard'")
+        
+        config = Config(task=task, max_steps=3)
         env_instance = BugTriageEnv(config)
         observation = env_instance.reset()
         
@@ -70,11 +73,11 @@ async def reset():
         elif hasattr(observation, "__dict__"):
             observation = observation.__dict__
         
-        logger.info("Environment reset: task=easy")
+        logger.info(f"Environment reset: task={task}")
         
         return {
             "observation": observation,
-            "info": {}
+            "info": {"task": task}
         }
     except Exception as e:
         logger.error(f"Reset failed: {e}")
@@ -179,6 +182,74 @@ async def tasks():
         }
     except Exception as e:
         logger.error(f"Tasks retrieval failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/evaluate")
+async def evaluate(task: str = "easy", num_episodes: int = 5):
+    """Run evaluation with baseline agent."""
+    try:
+        from baseline.baseline_agent import BaselineAgent
+        
+        agent = BaselineAgent(task=task)
+        results = []
+        total_reward = 0.0
+        
+        for episode in range(num_episodes):
+            result = agent.run_episode()
+            results.append(result)
+            total_reward += result["total_reward"]
+        
+        avg_reward = total_reward / num_episodes if num_episodes > 0 else 0.0
+        success_rate = sum(1 for r in results if r["success"]) / num_episodes if num_episodes > 0 else 0.0
+        
+        return {
+            "status": "success",
+            "task": task,
+            "num_episodes": num_episodes,
+            "avg_reward": avg_reward,
+            "success_rate": success_rate,
+            "total_reward": total_reward,
+            "episodes": results
+        }
+    except Exception as e:
+        logger.error(f"Evaluation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/metrics")
+async def metrics():
+    """Get environment metrics and configuration."""
+    try:
+        return {
+            "status": "success",
+            "environment": {
+                "name": "OpenEnv Bug Triage",
+                "version": "1.0",
+                "tasks": ["easy", "medium", "hard"],
+                "max_steps": 3,
+                "reward_range": [0.05, 0.95]
+            },
+            "graders": {
+                "easy": {
+                    "steps": 1,
+                    "max_reward": 0.35,
+                    "min_reward": 0.05
+                },
+                "medium": {
+                    "steps": 2,
+                    "max_reward": 0.70,
+                    "min_reward": 0.10
+                },
+                "hard": {
+                    "steps": 3,
+                    "max_reward": 0.95,
+                    "min_reward": 0.15
+                }
+            }
+        }
+    except Exception as e:
+        logger.error(f"Metrics retrieval failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

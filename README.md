@@ -42,6 +42,12 @@ Bug triage is a critical software engineering task where developers analyze bug 
 - **Hybrid Fix Evaluation**: Keyword matching + semantic similarity (TF-IDF vectorization)
 - **Reasoning Credit**: Partial credit for semantic understanding in Hard task
 - **Module Descriptions**: Auto-generated hints to guide agent reasoning
+- **Strict Score Range**: All rewards strictly between 0 and 1 (exclusive) for validator compliance
+
+### Reward Structure
+- **Easy Task**: 0.35 for correct bug_type, 0.05 otherwise
+- **Medium Task**: 0.35 per correct field (bug_type, file), 0.05 otherwise
+- **Hard Task**: 0.35 per correct field (bug_type, file), 0.05-0.95 for fix evaluation
 
 ### Developer Experience
 - **Comprehensive Logging**: ISO 8601 timestamps and detailed execution logs
