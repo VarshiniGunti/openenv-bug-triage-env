@@ -1,11 +1,6 @@
 README.md
-config_manager.py
-env.py
-logging_config.py
 openenv.yaml
 pyproject.toml
-verify.py
-verify_submission.py
 baseline/__init__.py
 baseline/baseline_agent.py
 core/__init__.py

@@ -426,14 +426,11 @@ The inference script produces structured logs:
 
 ## 🏗️ Project Structure
 
-```
-.
 ├── Dockerfile                # Docker configuration for HuggingFace Spaces
 ├── inference.py              # Inference script (OpenAI-compatible API)
 ├── pyproject.toml            # PEP 621 project configuration
 ├── README.md                 # This file
 ├── openenv.yaml              # OpenEnv configuration
-├── API.md                    # API documentation
 │
 ├── core/                     # Core package with utilities
 │   ├── __init__.py
@@ -484,7 +481,6 @@ The inference script produces structured logs:
     ├── test_graders.py
     ├── test_models.py
     └── test_normalization.py
-```
 
 ## 📊 Performance Metrics
 
@@ -619,9 +615,8 @@ curl -X POST https://Varshini28-openenv-bug-triage-env.hf.space/step \
 
 ## 🔗 Additional Resources
 
-- **API Documentation**: See [API.md](API.md) for detailed API reference
 - **OpenEnv Specification**: https://github.com/openenv/openenv
-- **Hackathon Details**: [https://www.meta.com/openenv-hackathon](https://www.scaler.com/school-of-technology/meta-pytorch-hackathon)
+- **Hackathon Details**: https://www.meta.com/openenv-hackathon
 
 ## 📄 License
 
@@ -631,9 +626,8 @@ MIT License - See LICENSE file for details
 
 For issues, questions, or contributions:
 
-1. Check existing documentation in [API.md](API.md)
-2. Review test cases in `tests/` directory
-3. Open an issue on GitHub
+1. Review test cases in `tests/` directory
+2. Open an issue on GitHub
 
 ## 🎓 Citation
 
