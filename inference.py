@@ -137,6 +137,51 @@ async def state():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/tasks")
+async def tasks():
+    """Get available tasks with their graders."""
+    try:
+        from graders import EasyGrader, MediumGrader, HardGrader
+        
+        tasks_list = [
+            {
+                "id": "task_1",
+                "name": "Authentication Bug Classification",
+                "difficulty": "easy",
+                "grader": "EasyGrader",
+                "grader_class": "graders.easy_grader.EasyGrader"
+            },
+            {
+                "id": "task_2",
+                "name": "Database Connection Bug",
+                "difficulty": "medium",
+                "grader": "MediumGrader",
+                "grader_class": "graders.medium_grader.MediumGrader"
+            },
+            {
+                "id": "task_3",
+                "name": "Memory Leak Detection",
+                "difficulty": "hard",
+                "grader": "HardGrader",
+                "grader_class": "graders.hard_grader.HardGrader"
+            }
+        ]
+        
+        return {
+            "status": "success",
+            "tasks": tasks_list,
+            "total_tasks": len(tasks_list),
+            "graders_available": {
+                "easy": "EasyGrader",
+                "medium": "MediumGrader",
+                "hard": "HardGrader"
+            }
+        }
+    except Exception as e:
+        logger.error(f"Tasks retrieval failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Inference script for validator
 if __name__ != "__main__":
     # This is imported as a module by uvicorn
