@@ -14,7 +14,10 @@ from models.scenario import BugScenario
 from models.config import Config
 from tasks import EASY_SCENARIOS, MEDIUM_SCENARIOS, HARD_SCENARIOS
 from graders import EasyGrader, MediumGrader, HardGrader
-from logging_config import get_logger
+try:
+    from core.logging_config import get_logger
+except ImportError:
+    from logging_config import get_logger
 from utils.normalization import normalize_bug_type, normalize_file, normalize_fix_text
 
 
