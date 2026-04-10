@@ -127,6 +127,13 @@ class BugTriageEnv:
         
         self.logger.info(f"Environment initialized with task={self.config.task}, max_steps={self.config.max_steps}")
         self.logger.info(f"Loaded {len(self.tasks)} tasks with graders")
+        
+        # Debug: Print task information
+        print("TASK COUNT:", len(self.tasks))
+        for task_id, task in self.tasks.items():
+            grader = task.get("grader_instance")
+            grader_type = type(grader).__name__ if grader else "None"
+            print(f"TASK: {task_id} GRADER TYPE: {grader_type}")
     
     def _load_scenarios(self) -> list:
         """Load scenarios based on configured task and normalize ground truth values."""
