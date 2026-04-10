@@ -79,17 +79,22 @@ class HardGrader:
             ground_truth_fix: The ground truth fix
             
         Returns:
-            Similarity score in [0.0, 1.0]
+            Similarity score strictly between 0 and 1 (exclusive)
         """
         try:
             # Use character-level n-grams for semantic similarity
             vectorizer = TfidfVectorizer(analyzer='char', ngram_range=(2, 3))
             vectors = vectorizer.fit_transform([action_fix, ground_truth_fix])
             similarity = cosine_similarity(vectors)[0, 1]
+            # Ensure strict range (0, 1)
+            if similarity <= 0.0:
+                return 0.1
+            if similarity >= 1.0:
+                return 0.9
             return float(similarity)
         except Exception:
             # Fallback to keyword matching if semantic analysis fails
-            return 1.0 if self.keyword_match(action_fix, ground_truth_fix) else 0.0
+            return 0.9 if self.keyword_match(action_fix, ground_truth_fix) else 0.1
     
     def combined_fix_match(self, action_fix: str, ground_truth_fix: str) -> float:
         """
