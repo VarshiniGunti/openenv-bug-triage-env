@@ -321,23 +321,35 @@ class BugTriageEnv:
             "current_scenario": self.current_scenario.model_dump() if self.current_scenario else None
         }
     
+    def get_tasks(self) -> list:
+        """
+        Get all loaded tasks with their grader instances.
+        
+        Returns:
+            List of tasks with grader instances that can be called
+        """
+        tasks_list = []
+        for task_id, task in self.tasks.items():
+            if "grader_instance" in task:
+                task_info = {
+                    "id": task.get("id"),
+                    "input": task.get("input"),
+                    "expected_output": task.get("expected_output"),
+                    "grader": task["grader_instance"]
+                }
+                tasks_list.append(task_info)
+        
+        self.logger.debug(f"Returning {len(tasks_list)} tasks with graders")
+        return tasks_list
+    
     def get_tasks_with_graders(self) -> list:
         """
-        Get all loaded tasks with their graders.
+        Get all loaded tasks with their graders (alias for get_tasks).
         
         Returns:
             List of tasks with grader instances
         """
-        tasks_list = []
-        for task_id, task in self.tasks.items():
-            task_info = {
-                "id": task.get("id"),
-                "input": task.get("input"),
-                "expected_output": task.get("expected_output"),
-                "has_grader": "grader_instance" in task
-            }
-            tasks_list.append(task_info)
-        return tasks_list
+        return self.get_tasks()
 
 
 # OpenEnv Server Wrapper

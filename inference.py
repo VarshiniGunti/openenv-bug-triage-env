@@ -54,9 +54,13 @@ try:
     tasks_with_graders = env_instance.get_tasks_with_graders()
     print(f"[START] Loaded {len(tasks_with_graders)} tasks with graders", flush=True)
     for task in tasks_with_graders:
-        print(f"[TASK] id={task['id']} has_grader={task['has_grader']}", flush=True)
+        has_grader = "grader" in task and task["grader"] is not None
+        grader_type = type(task.get("grader")).__name__ if has_grader else "None"
+        print(f"[TASK] id={task['id']} has_grader={has_grader} grader_type={grader_type}", flush=True)
 except Exception as e:
     print(f"Warning: Could not initialize environment: {e}", flush=True)
+    import traceback
+    traceback.print_exc()
     env_instance = None
 
 app = FastAPI(
@@ -186,52 +190,58 @@ async def state():
 async def tasks():
     """Get available tasks with their graders."""
     try:
-        from environment.env import get_tasks, get_graders
-        from graders import EasyGrader, MediumGrader, HardGrader
-        from tasks import EASY_SCENARIOS, MEDIUM_SCENARIOS, HARD_SCENARIOS
+        from core.env import BugTriageEnv as CoreBugTriageEnv
+        from models.config import Config
+        
+        # Create a temporary environment to get tasks with graders
+        temp_env = CoreBugTriageEnv(Config(task='easy'))
+        tasks_with_graders = temp_env.get_tasks()
+        
+        # Verify we have tasks with graders
+        if not tasks_with_graders or len(tasks_with_graders) < 3:
+            raise RuntimeError(f"Expected 3 tasks with graders, got {len(tasks_with_graders)}")
+        
+        # Test each grader
         from models.action import BugAction
         from models.scenario import BugScenario
+        from tasks import EASY_SCENARIOS, MEDIUM_SCENARIOS, HARD_SCENARIOS
         
-        # Get task definitions
-        tasks_list = get_tasks()
-        
-        # Verify graders are working by testing them
-        easy_grader = EasyGrader()
-        medium_grader = MediumGrader()
-        hard_grader = HardGrader()
-        
-        # Test graders with sample scenarios
-        easy_scenario = BugScenario(**EASY_SCENARIOS[0])
-        medium_scenario = BugScenario(**MEDIUM_SCENARIOS[0])
-        hard_scenario = BugScenario(**HARD_SCENARIOS[0])
-        
-        test_action = BugAction(
-            bug_type="null_pointer",
-            file="auth.py",
-            fix="Add null check"
-        )
-        
-        # Verify graders return valid scores
-        easy_score = easy_grader.grade(test_action, easy_scenario, 1)
-        medium_score = medium_grader.grade(test_action, medium_scenario, 1)
-        hard_score = hard_grader.grade(test_action, hard_scenario, 1)
-        
-        # Verify scores are in valid range (0, 1) exclusive
-        assert 0 < easy_score < 1, f"Easy grader score {easy_score} not in (0, 1)"
-        assert 0 < medium_score < 1, f"Medium grader score {medium_score} not in (0, 1)"
-        assert 0 < hard_score < 1, f"Hard grader score {hard_score} not in (0, 1)"
-        
-        # Add test scores to tasks
-        for task in tasks_list:
-            if task["difficulty"] == "easy":
-                task["test_score"] = float(easy_score)
-                task["scenarios"] = len(EASY_SCENARIOS)
-            elif task["difficulty"] == "medium":
-                task["test_score"] = float(medium_score)
-                task["scenarios"] = len(MEDIUM_SCENARIOS)
-            elif task["difficulty"] == "hard":
-                task["test_score"] = float(hard_score)
-                task["scenarios"] = len(HARD_SCENARIOS)
+        tasks_list = []
+        for task in tasks_with_graders:
+            grader = task['grader']
+            grader_type = type(grader).__name__
+            
+            # Get appropriate scenario for testing
+            if task['id'] == 'easy_bug':
+                scenario = BugScenario(**EASY_SCENARIOS[0])
+            elif task['id'] == 'medium_bug':
+                scenario = BugScenario(**MEDIUM_SCENARIOS[0])
+            elif task['id'] == 'hard_bug':
+                scenario = BugScenario(**HARD_SCENARIOS[0])
+            else:
+                continue
+            
+            # Test grader
+            test_action = BugAction(
+                bug_type=scenario.ground_truth_type,
+                file=scenario.ground_truth_file,
+                fix=scenario.ground_truth_fix
+            )
+            
+            test_score = grader.grade(test_action, scenario, 1)
+            
+            # Verify score is in valid range
+            assert 0 < test_score < 1, f"Grader {grader_type} score {test_score} not in (0, 1)"
+            
+            # Build task response
+            task_response = {
+                "id": task['id'],
+                "input": task['input'],
+                "expected_output": task['expected_output'],
+                "grader": grader_type,
+                "test_score": float(test_score)
+            }
+            tasks_list.append(task_response)
         
         return {
             "status": "success",
@@ -246,6 +256,8 @@ async def tasks():
         }
     except Exception as e:
         logger.error(f"Tasks retrieval failed: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
