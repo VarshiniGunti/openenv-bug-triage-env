@@ -39,7 +39,7 @@ def load_grader(grader_path: str):
         raise RuntimeError(f"Failed to load grader {grader_path}: {e}")
 
 
-def load_tasks_from_directory(tasks_dir: str = "tasks") -> Dict[str, Dict[str, Any]]:
+def load_tasks_with_graders(tasks_dir: str = "tasks") -> Dict[str, Dict[str, Any]]:
     """
     Load all task definitions from JSON files in the tasks directory.
     
@@ -58,19 +58,28 @@ def load_tasks_from_directory(tasks_dir: str = "tasks") -> Dict[str, Dict[str, A
     if not os.path.isdir(tasks_dir):
         raise RuntimeError(f"Tasks directory not found: {tasks_dir}")
     
+    # Map task IDs to grader paths
+    grader_map = {
+        "easy_bug": "graders.easy_grader.EasyGrader",
+        "medium_bug": "graders.medium_grader.MediumGrader",
+        "hard_bug": "graders.hard_grader.HardGrader"
+    }
+    
     # Load all JSON files from the tasks directory
     for filename in sorted(os.listdir(tasks_dir)):
         if filename.endswith(".json"):
             filepath = os.path.join(tasks_dir, filename)
             try:
-                with open(filepath, 'r') as f:
+                with open(filepath, 'r', encoding='utf-8') as f:
                     task = json.load(f)
                 
-                # Load the grader if specified
-                if "grader" in task:
-                    task["grader_instance"] = load_grader(task["grader"])
+                # Get task ID and map to grader
+                task_id = task.get("id")
+                if task_id in grader_map:
+                    grader_path = grader_map[task_id]
+                    task["grader_instance"] = load_grader(grader_path)
                 
-                tasks[task["id"]] = task
+                tasks[task_id] = task
             except Exception as e:
                 raise RuntimeError(f"Failed to load task from {filepath}: {e}")
     
@@ -101,7 +110,7 @@ class BugTriageEnv:
             random.seed(self.config.seed)
         
         # Load tasks from directory with graders
-        self.tasks = load_tasks_from_directory()
+        self.tasks = load_tasks_with_graders()
         self.current_task = None
         
         # Load scenarios based on task
