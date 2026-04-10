@@ -102,6 +102,7 @@ class BugTriageEnv:
         
         # Load tasks from directory with graders
         self.tasks = load_tasks_from_directory()
+        self.current_task = None
         
         # Load scenarios based on task
         self.scenarios = self._load_scenarios()
@@ -116,6 +117,7 @@ class BugTriageEnv:
         self.episode_rewards = []
         
         self.logger.info(f"Environment initialized with task={self.config.task}, max_steps={self.config.max_steps}")
+        self.logger.info(f"Loaded {len(self.tasks)} tasks with graders")
     
     def _load_scenarios(self) -> list:
         """Load scenarios based on configured task and normalize ground truth values."""
@@ -309,6 +311,24 @@ class BugTriageEnv:
             "previous_actions": self.previous_actions.copy(),
             "current_scenario": self.current_scenario.model_dump() if self.current_scenario else None
         }
+    
+    def get_tasks_with_graders(self) -> list:
+        """
+        Get all loaded tasks with their graders.
+        
+        Returns:
+            List of tasks with grader instances
+        """
+        tasks_list = []
+        for task_id, task in self.tasks.items():
+            task_info = {
+                "id": task.get("id"),
+                "input": task.get("input"),
+                "expected_output": task.get("expected_output"),
+                "has_grader": "grader_instance" in task
+            }
+            tasks_list.append(task_info)
+        return tasks_list
 
 
 # OpenEnv Server Wrapper

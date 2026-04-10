@@ -39,6 +39,26 @@ OPENENV_CONFIG = load_openenv_config()
 if OPENENV_CONFIG:
     print(f"Loaded OpenEnv config: {OPENENV_CONFIG}", flush=True)
 
+# Read API environment variables
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
+HF_TOKEN = os.getenv("HF_TOKEN", "")
+
+print(f"API_BASE_URL: {API_BASE_URL}", flush=True)
+print(f"MODEL_NAME: {MODEL_NAME}", flush=True)
+
+# Initialize environment with tasks and graders
+try:
+    from core.env import BugTriageEnv as CoreBugTriageEnv
+    env_instance = CoreBugTriageEnv()
+    tasks_with_graders = env_instance.get_tasks_with_graders()
+    print(f"[START] Loaded {len(tasks_with_graders)} tasks with graders", flush=True)
+    for task in tasks_with_graders:
+        print(f"[TASK] id={task['id']} has_grader={task['has_grader']}", flush=True)
+except Exception as e:
+    print(f"Warning: Could not initialize environment: {e}", flush=True)
+    env_instance = None
+
 app = FastAPI(
     title="OpenEnv Bug Triage Environment",
     description="Bug triage simulation environment for agent evaluation",
