@@ -3,6 +3,8 @@
 import random
 import sys
 import os
+import json
+import importlib
 from typing import Tuple, Dict, Any, Optional, List
 
 # Add parent directory to path for imports
@@ -21,61 +23,107 @@ except ImportError:
 from utils.normalization import normalize_bug_type, normalize_file, normalize_fix_text
 
 
-# Task definitions for validator discovery
-TASKS = [
-    {
-        "id": "task_1",
-        "name": "Authentication Bug Classification",
-        "description": "Classify a bug in the authentication module",
-        "difficulty": "easy",
-        "grader": "EasyGrader",
-        "grader_class": "graders.easy_grader.EasyGrader"
-    },
-    {
-        "id": "task_2",
-        "name": "Database Connection Bug",
-        "description": "Identify and fix a database connection issue",
-        "difficulty": "medium",
-        "grader": "MediumGrader",
-        "grader_class": "graders.medium_grader.MediumGrader"
-    },
-    {
-        "id": "task_3",
-        "name": "Memory Leak Detection",
-        "description": "Detect and fix a memory leak in the application",
-        "difficulty": "hard",
-        "grader": "HardGrader",
-        "grader_class": "graders.hard_grader.HardGrader"
-    }
-]
+def load_grader(grader_path: str):
+    """
+    Dynamically load and instantiate a grader from a module path.
+    
+    Args:
+        grader_path: Full path to grader class (e.g., "graders.easy_grader.EasyGrader")
+        
+    Returns:
+        Instantiated grader object
+    """
+    try:
+        module_path, class_name = grader_path.rsplit(".", 1)
+        module = importlib.import_module(module_path)
+        grader_class = getattr(module, class_name)
+        return grader_class()
+    except Exception as e:
+        raise RuntimeError(f"Failed to load grader {grader_path}: {e}")
 
-GRADERS = [
-    {
-        "name": "EasyGrader",
-        "class": "graders.easy_grader.EasyGrader",
-        "description": "Grader for easy-level bug triage tasks"
-    },
-    {
-        "name": "MediumGrader",
-        "class": "graders.medium_grader.MediumGrader",
-        "description": "Grader for medium-level bug triage tasks"
-    },
-    {
-        "name": "HardGrader",
-        "class": "graders.hard_grader.HardGrader",
-        "description": "Grader for hard-level bug triage tasks"
+
+def load_tasks_with_graders(tasks_dir: str = "tasks") -> Dict[str, Dict[str, Any]]:
+    """
+    Load all task definitions from JSON files in the tasks directory.
+    
+    Args:
+        tasks_dir: Directory containing task JSON files
+        
+    Returns:
+        Dictionary mapping task IDs to task definitions with loaded graders
+    """
+    tasks = {}
+    
+    # Get the absolute path to the tasks directory
+    if not os.path.isabs(tasks_dir):
+        tasks_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), tasks_dir)
+    
+    if not os.path.isdir(tasks_dir):
+        raise RuntimeError(f"Tasks directory not found: {tasks_dir}")
+    
+    # Map task IDs to grader paths
+    grader_map = {
+        "easy_bug": "graders.easy_grader.EasyGrader",
+        "medium_bug": "graders.medium_grader.MediumGrader",
+        "hard_bug": "graders.hard_grader.HardGrader"
     }
-]
+    
+    # Load all JSON files from the tasks directory
+    for filename in sorted(os.listdir(tasks_dir)):
+        if filename.endswith(".json"):
+            filepath = os.path.join(tasks_dir, filename)
+            try:
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    task = json.load(f)
+                
+                # Get task ID and map to grader
+                task_id = task.get("id")
+                if task_id in grader_map:
+                    grader_path = grader_map[task_id]
+                    task["grader_instance"] = load_grader(grader_path)
+                
+                tasks[task_id] = task
+            except Exception as e:
+                raise RuntimeError(f"Failed to load task from {filepath}: {e}")
+    
+    return tasks
 
 
 def get_tasks() -> List[Dict[str, Any]]:
-    """Get all available tasks with graders."""
-    return TASKS
+    """Get all available tasks with grader instances."""
+    tasks_dict = load_tasks_with_graders()
+    tasks_list = []
+    for task_id, task in tasks_dict.items():
+        if "grader_instance" in task:
+            task_info = {
+                "id": task.get("id"),
+                "input": task.get("input"),
+                "expected_output": task.get("expected_output"),
+                "grader": task["grader_instance"]
+            }
+            tasks_list.append(task_info)
+    return tasks_list
 
 
 def get_graders() -> List[Dict[str, Any]]:
     """Get all available graders."""
-    return GRADERS
+    return [
+        {
+            "name": "EasyGrader",
+            "class": "graders.easy_grader.EasyGrader",
+            "description": "Grader for easy-level bug triage tasks"
+        },
+        {
+            "name": "MediumGrader",
+            "class": "graders.medium_grader.MediumGrader",
+            "description": "Grader for medium-level bug triage tasks"
+        },
+        {
+            "name": "HardGrader",
+            "class": "graders.hard_grader.HardGrader",
+            "description": "Grader for hard-level bug triage tasks"
+        }
+    ]
 
 
 class BugTriageEnv:
