@@ -1,1 +1,1 @@
-{"id": "medium_bug", "input": "API returns timeout errors when database is under heavy load", "expected_output": "Implement connection pooling with configurable timeout and retry logic"}
+{"id": "medium_bug", "input": "API returns timeout errors when database is under heavy load", "expected_output": "Implement connection pooling with configurable timeout and retry logic", "grader": "medium_grader"}

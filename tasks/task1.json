@@ -1,5 +1,6 @@
 {
   "id": "easy_bug",
   "input": "Login fails for users with special characters in their password",
-  "expected_output": "Add proper escaping for special characters in password validation"
+  "expected_output": "Add proper escaping for special characters in password validation",
+  "grader": "easy_grader"
 }
