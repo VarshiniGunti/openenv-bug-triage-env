@@ -1,3 +1,5 @@
+name: openenv-bug-triage-env
+version: "1.0"
 entrypoint: inference.py
 
 tasks:
@@ -12,9 +14,9 @@ tasks:
     grader: hard_grader
 
 graders:
-  - name: easy_grader
+  easy_grader:
     path: graders.easy_grader.EasyGrader
-  - name: medium_grader
+  medium_grader:
     path: graders.medium_grader.MediumGrader
-  - name: hard_grader
+  hard_grader:
     path: graders.hard_grader.HardGrader
