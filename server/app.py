@@ -145,6 +145,41 @@ async def state():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/tasks")
+def get_tasks():
+    """Return all available tasks with graders — required by the validator."""
+    return [
+        {
+            "id": "easy_bug",
+            "description": "Easy bug triage task",
+            "difficulty": "easy",
+            "grader": "easy_grader"
+        },
+        {
+            "id": "medium_bug",
+            "description": "Medium bug triage task",
+            "difficulty": "medium",
+            "grader": "medium_grader"
+        },
+        {
+            "id": "hard_bug",
+            "description": "Hard bug triage task",
+            "difficulty": "hard",
+            "grader": "hard_grader"
+        }
+    ]
+
+
+@app.get("/graders")
+def get_graders():
+    """Return available graders."""
+    return {
+        "easy_grader": {"path": "graders.easy_grader.EasyGrader"},
+        "medium_grader": {"path": "graders.medium_grader.MediumGrader"},
+        "hard_grader": {"path": "graders.hard_grader.HardGrader"}
+    }
+
+
 def main():
     """Main entry point for the server."""
     import uvicorn

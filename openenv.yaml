@@ -12,9 +12,9 @@ tasks:
     grader: hard_grader
 
 graders:
-  easy_grader:
+  - name: easy_grader
     path: graders.easy_grader.EasyGrader
-  medium_grader:
+  - name: medium_grader
     path: graders.medium_grader.MediumGrader
-  hard_grader:
+  - name: hard_grader
     path: graders.hard_grader.HardGrader
