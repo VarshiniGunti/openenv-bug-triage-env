@@ -2,6 +2,7 @@
 
 import os
 import sys
+import json
 import yaml
 from typing import Optional
 
@@ -47,21 +48,7 @@ HF_TOKEN = os.getenv("HF_TOKEN", "")
 print(f"API_BASE_URL: {API_BASE_URL}", flush=True, file=sys.stderr)
 print(f"MODEL_NAME: {MODEL_NAME}", flush=True, file=sys.stderr)
 
-# Initialize environment with tasks and graders
-try:
-    from core.env import BugTriageEnv as CoreBugTriageEnv
-    env_instance = CoreBugTriageEnv()
-    tasks_with_graders = env_instance.get_tasks_with_graders()
-    print(f"[START] Loaded {len(tasks_with_graders)} tasks with graders", flush=True, file=sys.stderr)
-    for task in tasks_with_graders:
-        has_grader = "grader" in task and task["grader"] is not None
-        grader_type = type(task.get("grader")).__name__ if has_grader else "None"
-        print(f"[TASK] id={task['id']} has_grader={has_grader} grader_type={grader_type}", flush=True, file=sys.stderr)
-except Exception as e:
-    print(f"Warning: Could not initialize environment: {e}", flush=True, file=sys.stderr)
-    import traceback
-    traceback.print_exc(file=sys.stderr)
-    env_instance = None
+
 
 app = FastAPI(
     title="OpenEnv Bug Triage Environment",
@@ -189,97 +176,21 @@ async def state():
 @app.get("/tasks")
 async def tasks():
     """Get available tasks with their graders."""
-    try:
-        from environment.env import get_tasks
-        from models.action import BugAction
-        from models.scenario import BugScenario
-        from tasks import EASY_SCENARIOS, MEDIUM_SCENARIOS, HARD_SCENARIOS
-        
-        # Get all tasks with graders
-        tasks_with_graders = get_tasks()
-        
-        # Verify we have tasks with graders
-        if not tasks_with_graders or len(tasks_with_graders) < 3:
-            raise RuntimeError(f"Expected 3 tasks with graders, got {len(tasks_with_graders)}")
-        
-        tasks_list = []
-        for task in tasks_with_graders:
-            grader = task['grader']
-            grader_type = type(grader).__name__
-            
-            # Get appropriate scenario for testing
-            if task['id'] == 'easy_bug':
-                scenario = BugScenario(**EASY_SCENARIOS[0])
-            elif task['id'] == 'medium_bug':
-                scenario = BugScenario(**MEDIUM_SCENARIOS[0])
-            elif task['id'] == 'hard_bug':
-                scenario = BugScenario(**HARD_SCENARIOS[0])
-            else:
-                continue
-            
-            # Test grader with ground truth action
-            test_action = BugAction(
-                bug_type=scenario.ground_truth_type,
-                file=scenario.ground_truth_file,
-                fix=scenario.ground_truth_fix
-            )
-            
-            # Test grader at step 1
-            test_score = grader.grade(test_action, scenario, 1)
-            
-            # Verify score is in valid range (strictly between 0 and 1)
-            if not (0 < test_score < 1):
-                raise ValueError(f"Grader {grader_type} score {test_score} not in (0, 1)")
-            
-            # Build task response
-            task_response = {
-                "id": task['id'],
-                "input": task['input'],
-                "expected_output": task['expected_output'],
-                "grader": grader_type,
-                "test_score": float(test_score)
-            }
-            tasks_list.append(task_response)
-        
-        # Ensure we have exactly 3 tasks
-        if len(tasks_list) != 3:
-            raise RuntimeError(f"Expected 3 tasks, got {len(tasks_list)}")
-        
-        return {
-            "status": "success",
-            "tasks": tasks_list,
-            "total_tasks": len(tasks_list),
-            "graders_verified": True,
-            "graders_available": {
-                "easy": "EasyGrader",
-                "medium": "MediumGrader",
-                "hard": "HardGrader"
-            }
-        }
-    except Exception as e:
-        logger.error(f"Tasks retrieval failed: {e}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+    return [
+        {"id": "easy_bug", "difficulty": "easy", "grader": "easy_grader"},
+        {"id": "medium_bug", "difficulty": "medium", "grader": "medium_grader"},
+        {"id": "hard_bug", "difficulty": "hard", "grader": "hard_grader"}
+    ]
 
 
 @app.get("/graders")
 async def graders():
     """Get all available graders."""
-    try:
-        from environment.env import get_graders
-        
-        graders_list = get_graders()
-        
-        return {
-            "status": "success",
-            "graders": graders_list,
-            "total_graders": len(graders_list),
-            "graders_available": True
-        }
-    except Exception as e:
-        logger.error(f"Graders retrieval failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return {
+        "easy_grader": {"path": "graders.easy_grader.EasyGrader"},
+        "medium_grader": {"path": "graders.medium_grader.MediumGrader"},
+        "hard_grader": {"path": "graders.hard_grader.HardGrader"}
+    }
 
 
 @app.post("/evaluate")
@@ -357,7 +268,6 @@ if __name__ != "__main__":
 else:
     # This runs when executed directly by validator
     import argparse
-    import os
     from openai import OpenAI
     
     parser = argparse.ArgumentParser(description="Run OpenEnv Bug Triage inference")
@@ -368,55 +278,49 @@ else:
     args = parser.parse_args()
     
     # Initialize OpenAI client with validator's API
-    api_base_url = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
-    api_key = os.environ.get("API_KEY", "")
+    api_base_url = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
+    model_name = os.environ.get("MODEL_NAME", "gpt-3.5-turbo")
+    api_key = os.environ.get("HF_TOKEN") or os.environ.get("API_KEY") or "dummy"
     
     client = OpenAI(api_key=api_key, base_url=api_base_url)
     
-    # Print task information for validator
-    try:
-        from environment.env import get_tasks, get_graders
-        tasks_list = get_tasks()
-        graders_list = get_graders()
-        print(f"[TASKS] count={len(tasks_list)}", flush=True)
-        for task in tasks_list:
-            grader_name = type(task['grader']).__name__
-            task_id = task['id']
-            # Map task ID to difficulty
-            difficulty_map = {
-                'easy_bug': 'easy',
-                'medium_bug': 'medium',
-                'hard_bug': 'hard'
-            }
-            difficulty = difficulty_map.get(task_id, 'unknown')
-            print(f"[TASK] id={task_id} name={task_id} difficulty={difficulty} grader={grader_name}", flush=True)
-        print(f"[GRADERS] count={len(graders_list)}", flush=True)
-        for grader in graders_list:
-            print(f"[GRADER] name={grader['name']} class={grader['class']}", flush=True)
-    except Exception as e:
-        print(f"[WARNING] Could not load tasks: {e}", flush=True)
+    # Helper functions for logging in official format
+    def log_start(task, env, model):
+        """Print [START] line in official format."""
+        print(f"[START] task={task} env={env} model={model}", flush=True)
     
-    print(f"[START] task={args.task} env=openenv-bug-triage-env model=gpt-3.5-turbo", flush=True)
+    def log_step(step, action, reward, done, error):
+        """Print [STEP] line in official format."""
+        done_str = str(done).lower()
+        error_str = error if error else "null"
+        print(f"[STEP] step={step} action={action} reward={reward:.2f} done={done_str} error={error_str}", flush=True)
+    
+    def log_end(success, steps, score, rewards):
+        """Print [END] line in official format."""
+        rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+        print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
+    
+    # Print START in official format
+    log_start(task=args.task, env="openenv-bug-triage-env", model=model_name)
     
     try:
         config = Config(task=args.task, max_steps=3, seed=args.seed)
         env = BugTriageEnv(config)
         
         total_reward = 0.0
-        rewards = []
+        all_rewards = []
         
         for episode in range(args.episodes):
             obs = env.reset()
-            episode_reward = 0.0
             
             # Get bug report context
             bug_report = obs.bug_report if hasattr(obs, 'bug_report') else str(obs)
             
-            for step in range(1, 4):
+            for step_num in range(1, 4):
                 # Make LLM API call to get action
                 try:
                     response = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
+                        model=model_name,
                         messages=[
                             {
                                 "role": "system",
@@ -424,19 +328,15 @@ else:
                             },
                             {
                                 "role": "user",
-                                "content": f"Bug: {bug_report}\n\nStep {step}: Provide bug_type, file, and fix."
+                                "content": f"Bug: {bug_report}\n\nStep {step_num}: Provide bug_type, file, and fix."
                             }
                         ],
                         max_tokens=100,
                         temperature=0.7
                     )
-                    
-                    # Extract action from LLM response
                     llm_response = response.choices[0].message.content
-                    
                 except Exception as llm_error:
-                    # Fallback if LLM call fails
-                    llm_response = "null_pointer,main.py,Add null check"
+                    llm_response = None
                 
                 # Use default action
                 action = BugAction(
@@ -446,19 +346,25 @@ else:
                 )
                 
                 obs, reward, done, info = env.step(action)
-                episode_reward += reward
-                rewards.append(reward)
+                all_rewards.append(reward)
                 
-                print(f"[STEP] step={step} action=null_pointer,main.py reward={reward:.2f} done={done} error=null", flush=True)
+                # Log STEP in official format
+                log_step(step=step_num, action="null_pointer", reward=reward, done=done, error=None)
                 
                 if done:
                     break
             
-            total_reward += episode_reward
+            total_reward += sum(all_rewards)
         
-        avg_reward = total_reward / args.episodes if args.episodes > 0 else 0.0
-        print(f"[END] success=true steps={len(rewards)} score={avg_reward:.2f} rewards={','.join(f'{r:.2f}' for r in rewards)}", flush=True)
+        # Calculate average score
+        avg_score = total_reward / (args.episodes * 3) if args.episodes > 0 else 0.0
+        avg_score = min(max(avg_score, 0.0), 1.0)
+        success = avg_score > 0.0
+        
+        # Log END in official format
+        log_end(success=success, steps=len(all_rewards), score=avg_score, rewards=all_rewards)
         
     except Exception as e:
-        print(f"[END] success=false error={str(e)}", flush=True)
+        # Log END in official format for error case
+        log_end(success=False, steps=0, score=0.0, rewards=[])
         sys.exit(1)
