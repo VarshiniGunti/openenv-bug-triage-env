@@ -22,7 +22,7 @@ required_files = [
 all_files_exist = True
 for file in required_files:
     exists = os.path.exists(file)
-    status = "✓" if exists else "✗"
+    status = "[OK]" if exists else "[FAIL]"
     print(f"  {status} {file}")
     if not exists:
         all_files_exist = False
@@ -40,7 +40,7 @@ required_dirs = [
 all_dirs_exist = True
 for dir in required_dirs:
     exists = os.path.isdir(dir)
-    status = "✓" if exists else "✗"
+    status = "[OK]" if exists else "[FAIL]"
     print(f"  {status} {dir}/")
     if not exists:
         all_dirs_exist = False
@@ -55,9 +55,9 @@ try:
     has_graders = 'graders' in config and len(config['graders']) >= 3
     has_entrypoint = 'entrypoint' in config and config['entrypoint'] == 'inference.py'
     
-    print(f"  {'✓' if has_tasks else '✗'} Has 3+ tasks: {len(config.get('tasks', []))} tasks")
-    print(f"  {'✓' if has_graders else '✗'} Has 3+ graders: {len(config.get('graders', []))} graders")
-    print(f"  {'✓' if has_entrypoint else '✗'} Entrypoint is inference.py")
+    print(f"  {'[OK]' if has_tasks else '[FAIL]'} Has 3+ tasks: {len(config.get('tasks', []))} tasks")
+    print(f"  {'[OK]' if has_graders else '[FAIL]'} Has 3+ graders: {len(config.get('graders', []))} graders")
+    print(f"  {'[OK]' if has_entrypoint else '[FAIL]'} Entrypoint is inference.py")
     
     yaml_valid = has_tasks and has_graders and has_entrypoint
 except Exception as e:
@@ -70,12 +70,12 @@ try:
     from graders import EasyGrader, MediumGrader, HardGrader
     from tasks import EASY_SCENARIOS, MEDIUM_SCENARIOS, HARD_SCENARIOS
     
-    print(f"  ✓ EasyGrader imported")
-    print(f"  ✓ MediumGrader imported")
-    print(f"  ✓ HardGrader imported")
-    print(f"  ✓ EASY_SCENARIOS: {len(EASY_SCENARIOS)} scenarios")
-    print(f"  ✓ MEDIUM_SCENARIOS: {len(MEDIUM_SCENARIOS)} scenarios")
-    print(f"  ✓ HARD_SCENARIOS: {len(HARD_SCENARIOS)} scenarios")
+    print(f"  [OK] EasyGrader imported")
+    print(f"  [OK] MediumGrader imported")
+    print(f"  [OK] HardGrader imported")
+    print(f"  [OK] EASY_SCENARIOS: {len(EASY_SCENARIOS)} scenarios")
+    print(f"  [OK] MEDIUM_SCENARIOS: {len(MEDIUM_SCENARIOS)} scenarios")
+    print(f"  [OK] HARD_SCENARIOS: {len(HARD_SCENARIOS)} scenarios")
     
     graders_valid = True
 except Exception as e:
@@ -93,7 +93,7 @@ try:
     all_routes_present = all(route in routes for route in required_routes)
     
     for route in required_routes:
-        status = "✓" if route in routes else "✗"
+        status = "[OK]" if route in routes else "[FAIL]"
         print(f"  {status} {route}")
     
     app_valid = all_routes_present
@@ -127,9 +127,9 @@ try:
     medium_valid = 0 < medium_score < 1
     hard_valid = 0 < hard_score < 1
     
-    print(f"  {'✓' if easy_valid else '✗'} Easy grader score: {easy_score:.2f} (valid: {easy_valid})")
-    print(f"  {'✓' if medium_valid else '✗'} Medium grader score: {medium_score:.2f} (valid: {medium_valid})")
-    print(f"  {'✓' if hard_valid else '✗'} Hard grader score: {hard_score:.2f} (valid: {hard_valid})")
+    print(f"  {'[OK]' if easy_valid else '[FAIL]'} Easy grader score: {easy_score:.2f} (valid: {easy_valid})")
+    print(f"  {'[OK]' if medium_valid else '[FAIL]'} Medium grader score: {medium_score:.2f} (valid: {medium_valid})")
+    print(f"  {'[OK]' if hard_valid else '[FAIL]'} Hard grader score: {hard_score:.2f} (valid: {hard_valid})")
     
     scores_valid = easy_valid and medium_valid and hard_valid
 except Exception as e:
@@ -148,9 +148,9 @@ try:
     has_steps = 'steps' in result and len(result['steps']) > 0
     has_success = 'success' in result
     
-    print(f"  {'✓' if has_reward else '✗'} Episode has reward: {result.get('total_reward', 'N/A')}")
-    print(f"  {'✓' if has_steps else '✗'} Episode has steps: {len(result.get('steps', []))} steps")
-    print(f"  {'✓' if has_success else '✗'} Episode has success flag: {result.get('success', 'N/A')}")
+    print(f"  {'[OK]' if has_reward else '[FAIL]'} Episode has reward: {result.get('total_reward', 'N/A')}")
+    print(f"  {'[OK]' if has_steps else '[FAIL]'} Episode has steps: {len(result.get('steps', []))} steps")
+    print(f"  {'[OK]' if has_success else '[FAIL]'} Episode has success flag: {result.get('success', 'N/A')}")
     
     agent_valid = has_reward and has_steps and has_success
 except Exception as e:
@@ -170,12 +170,12 @@ try:
     has_expose = '7860' in dockerfile_content
     has_cmd = 'uvicorn' in dockerfile_content and 'inference:app' in dockerfile_content
     
-    print(f"  {'✓' if has_python else '✗'} Python 3.10 base image")
-    print(f"  {'✓' if has_workdir else '✗'} WORKDIR set to /app")
-    print(f"  {'✓' if has_copy else '✗'} COPY command present")
-    print(f"  {'✓' if has_pip else '✗'} pip install command present")
-    print(f"  {'✓' if has_expose else '✗'} Port 7860 exposed")
-    print(f"  {'✓' if has_cmd else '✗'} CMD with uvicorn and inference:app")
+    print(f"  {'[OK]' if has_python else '[FAIL]'} Python 3.10 base image")
+    print(f"  {'[OK]' if has_workdir else '[FAIL]'} WORKDIR set to /app")
+    print(f"  {'[OK]' if has_copy else '[FAIL]'} COPY command present")
+    print(f"  {'[OK]' if has_pip else '[FAIL]'} pip install command present")
+    print(f"  {'[OK]' if has_expose else '[FAIL]'} Port 7860 exposed")
+    print(f"  {'[OK]' if has_cmd else '[FAIL]'} CMD with uvicorn and inference:app")
     
     dockerfile_valid = all([has_python, has_workdir, has_copy, has_pip, has_expose, has_cmd])
 except Exception as e:
@@ -202,17 +202,17 @@ passed = sum(1 for _, result in all_checks if result)
 total = len(all_checks)
 
 for check_name, result in all_checks:
-    status = "✓ PASS" if result else "✗ FAIL"
+    status = "[PASS]" if result else "[FAIL]"
     print(f"{status}: {check_name}")
 
 print("\n" + "=" * 70)
 if passed == total:
-    print(f"✓ ALL CHECKS PASSED ({passed}/{total})")
+    print(f"[PASS] ALL CHECKS PASSED ({passed}/{total})")
     print("Project is ready for submission!")
     print("=" * 70)
     sys.exit(0)
 else:
-    print(f"✗ SOME CHECKS FAILED ({passed}/{total})")
+    print(f"[FAIL] SOME CHECKS FAILED ({passed}/{total})")
     print("Please fix the issues above before submission.")
     print("=" * 70)
     sys.exit(1)

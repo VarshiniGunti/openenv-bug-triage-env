@@ -19,7 +19,7 @@ except ImportError:
     from logging_config import get_logger
 
 # Print working directory for debugging
-print(f"Current working dir: {os.getcwd()}", flush=True)
+print(f"Current working dir: {os.getcwd()}", flush=True, file=sys.stderr)
 
 # Load OpenEnv configuration
 def load_openenv_config():
@@ -28,39 +28,39 @@ def load_openenv_config():
     try:
         with open(path, "r") as f:
             config = yaml.safe_load(f)
-        print(f"Loaded OpenEnv config from {path}", flush=True)
+        print(f"Loaded OpenEnv config from {path}", flush=True, file=sys.stderr)
         return config
     except Exception as e:
-        print(f"Warning: Could not load openenv.yaml from {path}: {e}", flush=True)
+        print(f"Warning: Could not load openenv.yaml from {path}: {e}", flush=True, file=sys.stderr)
         return None
 
 # Load config at startup
 OPENENV_CONFIG = load_openenv_config()
 if OPENENV_CONFIG:
-    print(f"Loaded OpenEnv config: {OPENENV_CONFIG}", flush=True)
+    print(f"Loaded OpenEnv config: {OPENENV_CONFIG}", flush=True, file=sys.stderr)
 
 # Read API environment variables
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
 HF_TOKEN = os.getenv("HF_TOKEN", "")
 
-print(f"API_BASE_URL: {API_BASE_URL}", flush=True)
-print(f"MODEL_NAME: {MODEL_NAME}", flush=True)
+print(f"API_BASE_URL: {API_BASE_URL}", flush=True, file=sys.stderr)
+print(f"MODEL_NAME: {MODEL_NAME}", flush=True, file=sys.stderr)
 
 # Initialize environment with tasks and graders
 try:
     from core.env import BugTriageEnv as CoreBugTriageEnv
     env_instance = CoreBugTriageEnv()
     tasks_with_graders = env_instance.get_tasks_with_graders()
-    print(f"[START] Loaded {len(tasks_with_graders)} tasks with graders", flush=True)
+    print(f"[START] Loaded {len(tasks_with_graders)} tasks with graders", flush=True, file=sys.stderr)
     for task in tasks_with_graders:
         has_grader = "grader" in task and task["grader"] is not None
         grader_type = type(task.get("grader")).__name__ if has_grader else "None"
-        print(f"[TASK] id={task['id']} has_grader={has_grader} grader_type={grader_type}", flush=True)
+        print(f"[TASK] id={task['id']} has_grader={has_grader} grader_type={grader_type}", flush=True, file=sys.stderr)
 except Exception as e:
-    print(f"Warning: Could not initialize environment: {e}", flush=True)
+    print(f"Warning: Could not initialize environment: {e}", flush=True, file=sys.stderr)
     import traceback
-    traceback.print_exc()
+    traceback.print_exc(file=sys.stderr)
     env_instance = None
 
 app = FastAPI(
@@ -190,21 +190,17 @@ async def state():
 async def tasks():
     """Get available tasks with their graders."""
     try:
-        from core.env import BugTriageEnv as CoreBugTriageEnv
-        from models.config import Config
+        from environment.env import get_tasks
+        from models.action import BugAction
+        from models.scenario import BugScenario
+        from tasks import EASY_SCENARIOS, MEDIUM_SCENARIOS, HARD_SCENARIOS
         
-        # Create a temporary environment to get tasks with graders
-        temp_env = CoreBugTriageEnv(Config(task='easy'))
-        tasks_with_graders = temp_env.get_tasks()
+        # Get all tasks with graders
+        tasks_with_graders = get_tasks()
         
         # Verify we have tasks with graders
         if not tasks_with_graders or len(tasks_with_graders) < 3:
             raise RuntimeError(f"Expected 3 tasks with graders, got {len(tasks_with_graders)}")
-        
-        # Test each grader
-        from models.action import BugAction
-        from models.scenario import BugScenario
-        from tasks import EASY_SCENARIOS, MEDIUM_SCENARIOS, HARD_SCENARIOS
         
         tasks_list = []
         for task in tasks_with_graders:
@@ -221,17 +217,19 @@ async def tasks():
             else:
                 continue
             
-            # Test grader
+            # Test grader with ground truth action
             test_action = BugAction(
                 bug_type=scenario.ground_truth_type,
                 file=scenario.ground_truth_file,
                 fix=scenario.ground_truth_fix
             )
             
+            # Test grader at step 1
             test_score = grader.grade(test_action, scenario, 1)
             
-            # Verify score is in valid range
-            assert 0 < test_score < 1, f"Grader {grader_type} score {test_score} not in (0, 1)"
+            # Verify score is in valid range (strictly between 0 and 1)
+            if not (0 < test_score < 1):
+                raise ValueError(f"Grader {grader_type} score {test_score} not in (0, 1)")
             
             # Build task response
             task_response = {
@@ -242,6 +240,10 @@ async def tasks():
                 "test_score": float(test_score)
             }
             tasks_list.append(task_response)
+        
+        # Ensure we have exactly 3 tasks
+        if len(tasks_list) != 3:
+            raise RuntimeError(f"Expected 3 tasks, got {len(tasks_list)}")
         
         return {
             "status": "success",
@@ -378,7 +380,16 @@ else:
         graders_list = get_graders()
         print(f"[TASKS] count={len(tasks_list)}", flush=True)
         for task in tasks_list:
-            print(f"[TASK] id={task['id']} name={task['name']} difficulty={task['difficulty']} grader={task['grader']}", flush=True)
+            grader_name = type(task['grader']).__name__
+            task_id = task['id']
+            # Map task ID to difficulty
+            difficulty_map = {
+                'easy_bug': 'easy',
+                'medium_bug': 'medium',
+                'hard_bug': 'hard'
+            }
+            difficulty = difficulty_map.get(task_id, 'unknown')
+            print(f"[TASK] id={task_id} name={task_id} difficulty={difficulty} grader={grader_name}", flush=True)
         print(f"[GRADERS] count={len(graders_list)}", flush=True)
         for grader in graders_list:
             print(f"[GRADER] name={grader['name']} class={grader['class']}", flush=True)
