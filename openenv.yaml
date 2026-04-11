@@ -6,23 +6,17 @@ tasks:
   - id: easy_bug
     file: tasks/task1.json
     grader: easy_grader
-    description: "Easy bug triage task - classify bug type"
   - id: medium_bug
     file: tasks/task2.json
     grader: medium_grader
-    description: "Medium bug triage task - classify bug type and file location"
   - id: hard_bug
     file: tasks/task3.json
     grader: hard_grader
-    description: "Hard bug triage task - classify bug type, file location, and propose fix"
 
 graders:
   easy_grader:
     path: graders.easy_grader.EasyGrader
-    description: "Grader for easy task"
   medium_grader:
     path: graders.medium_grader.MediumGrader
-    description: "Grader for medium task"
   hard_grader:
     path: graders.hard_grader.HardGrader
-    description: "Grader for hard task"
