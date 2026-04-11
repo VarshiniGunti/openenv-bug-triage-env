@@ -129,7 +129,7 @@ async def step(action: dict = {}):
         bug_action = BugAction(
             bug_type=action.get("bug_type") or "logic",
             file=action.get("file") or "main.py",
-            fix=action.get("fix") or "Fix the issue"
+            fix=action.get("fix") or "Apply a fix to resolve the issue"
         )
         
         observation, reward, done, info = env_instance.step(bug_action)
@@ -300,6 +300,48 @@ else:
         rewards_str = ",".join(f"{r:.2f}" for r in rewards)
         print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
     
+    def parse_llm_response(llm_response: str) -> Optional[dict]:
+        """Parse LLM response to extract bug_type, file, fix.
+        
+        Args:
+            llm_response: Raw text response from LLM
+            
+        Returns:
+            Dictionary with 'bug_type', 'file', 'fix' keys if parsing succeeds, None otherwise
+        """
+        if not llm_response:
+            return None
+        
+        lines = llm_response.strip().split('\n')
+        result = {}
+        
+        for line in lines:
+            line_lower = line.lower()
+            # Extract bug_type
+            if 'bug_type' in line_lower or 'type' in line_lower:
+                parts = line.split(':')
+                if len(parts) > 1:
+                    bug_type_value = parts[1].strip().lower().replace(' ', '_')
+                    if bug_type_value:
+                        result['bug_type'] = bug_type_value
+            # Extract file
+            elif 'file' in line_lower:
+                parts = line.split(':')
+                if len(parts) > 1:
+                    file_value = parts[1].strip()
+                    if file_value:
+                        result['file'] = file_value
+            # Extract fix
+            elif 'fix' in line_lower:
+                parts = line.split(':')
+                if len(parts) > 1:
+                    fix_value = parts[1].strip()
+                    if fix_value:
+                        result['fix'] = fix_value
+        
+        # Return result only if all required fields are present
+        return result if all(k in result for k in ['bug_type', 'file', 'fix']) else None
+    
     # Print START in official format
     log_start(task=args.task, env="openenv-bug-triage-env", model=model_name)
     
@@ -318,6 +360,7 @@ else:
             
             for step_num in range(1, 4):
                 # Make LLM API call to get action
+                action = None
                 try:
                     response = client.chat.completions.create(
                         model=model_name,
@@ -335,15 +378,28 @@ else:
                         temperature=0.7
                     )
                     llm_response = response.choices[0].message.content
+                    
+                    # Parse LLM response to extract structured data
+                    parsed = parse_llm_response(llm_response)
+                    
+                    # Use parsed values if valid, otherwise use fallback
+                    if parsed:
+                        action = BugAction(
+                            bug_type=parsed['bug_type'],
+                            file=parsed['file'],
+                            fix=parsed['fix']
+                        )
                 except Exception as llm_error:
-                    llm_response = None
+                    # Fallback on any LLM error
+                    pass
                 
-                # Use default action
-                action = BugAction(
-                    bug_type="null_pointer",
-                    file="main.py",
-                    fix="Add null check"
-                )
+                # Use default action if parsing failed or LLM call failed
+                if action is None:
+                    action = BugAction(
+                        bug_type="null_pointer",
+                        file="main.py",
+                        fix="Add null check"
+                    )
                 
                 obs, reward, done, info = env.step(action)
                 all_rewards.append(reward)

@@ -39,7 +39,7 @@ MEDIUM_SCENARIOS = [
     },
     {
         "bug_report": "Two-factor authentication fails for users with certain phone numbers. The error message indicates an issue with SMS delivery.",
-        "ground_truth_type": "authentication",
+        "ground_truth_type": "session",
         "ground_truth_file": "two_factor_auth.py",
         "ground_truth_fix": "Fix phone number formatting before sending SMS",
         "repo_modules": ["two_factor_auth.py", "sms_service.py", "auth.py", "validation.py", "models.py", "utils.py", "api.py", "database.py", "config.py", "middleware.py"],
@@ -84,7 +84,7 @@ MEDIUM_SCENARIOS = [
     },
     {
         "bug_report": "The webhook endpoint fails to process events from external services. The error log shows 'Signature verification failed' for valid requests.",
-        "ground_truth_type": "authentication",
+        "ground_truth_type": "null_pointer",
         "ground_truth_file": "webhook_handler.py",
         "ground_truth_fix": "Fix webhook signature verification to handle different encoding formats",
         "repo_modules": ["webhook_handler.py", "security.py", "crypto.py", "utils.py", "models.py", "api.py", "middleware.py", "config.py", "validation.py", "logging.py"],

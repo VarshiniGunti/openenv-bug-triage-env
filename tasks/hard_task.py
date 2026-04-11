@@ -39,7 +39,7 @@ HARD_SCENARIOS = [
     },
     {
         "bug_report": "OAuth login fails for users with certain email providers. The error occurs during token validation. The issue appears to be related to how the token signature is verified.",
-        "ground_truth_type": "authentication",
+        "ground_truth_type": "null_pointer",
         "ground_truth_file": "oauth_validator.py",
         "ground_truth_fix": "Fix JWT token signature verification to handle different key formats correctly",
         "repo_modules": ["oauth_validator.py", "jwt_handler.py", "auth.py", "security.py", "crypto.py", "models.py", "utils.py", "config.py", "database.py", "cache.py", "api.py", "middleware.py", "logging.py", "monitoring.py", "validation.py", "key_manager.py", "token_manager.py", "user_service.py", "metrics.py", "health_check.py"],
@@ -75,7 +75,7 @@ HARD_SCENARIOS = [
     },
     {
         "bug_report": "API rate limiting fails to prevent abuse. Some users can make unlimited requests while others are blocked. The rate limit counter appears to be shared incorrectly across requests.",
-        "ground_truth_type": "authentication",
+        "ground_truth_type": "race_condition",
         "ground_truth_file": "rate_limiter.py",
         "ground_truth_fix": "Fix rate limit counter to use per-user tracking with proper cache invalidation",
         "repo_modules": ["rate_limiter.py", "auth.py", "cache.py", "models.py", "utils.py", "config.py", "middleware.py", "api.py", "database.py", "monitoring.py", "logging.py", "metrics.py", "security.py", "validation.py", "user_service.py", "token_manager.py", "threading.py", "queue.py", "storage.py", "health_check.py"],
@@ -87,7 +87,7 @@ HARD_SCENARIOS = [
         "ground_truth_type": "race_condition",
         "ground_truth_file": "distributed_cache.py",
         "ground_truth_fix": "Implement proper cache invalidation with distributed locking and message broadcasting",
-        "repo_modules": ["distributed_cache.py", "cache.py", "lock_manager.py", "messaging.py", "models.py", "utils.py", "config.py", "monitoring.py", "logging.py", "api.py", "middleware.py", "validation.py", "threading.py", "queue.py", "metrics.py", "profiler.py", "storage.py", "health_check.py"],
+        "repo_modules": ["distributed_cache.py", "cache.py", "lock_manager.py", "messaging.py", "models.py", "utils.py", "config.py", "monitoring.py", "logging.py", "api.py", "middleware.py", "validation.py", "threading.py", "queue.py", "metrics.py", "profiler.py", "storage.py", "health_check.py", "sync_engine.py", "replication.py", "consistency_checker.py"],
         "difficulty": "hard",
         "scenario_id": "hard_10"
     },
@@ -96,7 +96,7 @@ HARD_SCENARIOS = [
         "ground_truth_type": "memory",
         "ground_truth_file": "ml_inference.py",
         "ground_truth_fix": "Implement batch processing with memory pooling and garbage collection optimization",
-        "repo_modules": ["ml_inference.py", "model_loader.py", "memory_manager.py", "utils.py", "models.py", "api.py", "middleware.py", "config.py", "monitoring.py", "logging.py", "metrics.py", "profiler.py", "threading.py", "queue.py", "storage.py", "health_check.py", "gc_manager.py", "cleanup.py", "validation.py"],
+        "repo_modules": ["ml_inference.py", "model_loader.py", "memory_manager.py", "utils.py", "models.py", "api.py", "middleware.py", "config.py", "monitoring.py", "logging.py", "metrics.py", "profiler.py", "threading.py", "queue.py", "storage.py", "health_check.py", "gc_manager.py", "cleanup.py", "validation.py", "batch_processor.py", "resource_manager.py"],
         "difficulty": "hard",
         "scenario_id": "hard_11"
     },
@@ -105,7 +105,7 @@ HARD_SCENARIOS = [
         "ground_truth_type": "performance",
         "ground_truth_file": "service_mesh.py",
         "ground_truth_fix": "Implement circuit breaker pattern with exponential backoff and connection pooling",
-        "repo_modules": ["service_mesh.py", "api_client.py", "connection_pool.py", "retry_logic.py", "models.py", "utils.py", "config.py", "monitoring.py", "logging.py", "middleware.py", "metrics.py", "health_check.py", "threading.py", "queue.py", "validation.py", "security.py", "auth.py", "storage.py", "profiler.py"],
+        "repo_modules": ["service_mesh.py", "api_client.py", "connection_pool.py", "retry_logic.py", "models.py", "utils.py", "config.py", "monitoring.py", "logging.py", "middleware.py", "metrics.py", "health_check.py", "threading.py", "queue.py", "validation.py", "security.py", "auth.py", "storage.py", "profiler.py", "circuit_breaker.py", "load_balancer.py"],
         "difficulty": "hard",
         "scenario_id": "hard_12"
     },
@@ -114,7 +114,7 @@ HARD_SCENARIOS = [
         "ground_truth_type": "logic",
         "ground_truth_file": "data_pipeline.py",
         "ground_truth_fix": "Fix data transformation logic to ensure deterministic processing order and proper state management",
-        "repo_modules": ["data_pipeline.py", "data_processor.py", "transformation.py", "models.py", "utils.py", "database.py", "cache.py", "api.py", "middleware.py", "config.py", "monitoring.py", "logging.py", "validation.py", "metrics.py", "profiler.py", "storage.py", "threading.py", "queue.py"],
+        "repo_modules": ["data_pipeline.py", "data_processor.py", "transformation.py", "models.py", "utils.py", "database.py", "cache.py", "api.py", "middleware.py", "config.py", "monitoring.py", "logging.py", "validation.py", "metrics.py", "profiler.py", "storage.py", "threading.py", "queue.py", "orchestrator.py", "state_manager.py"],
         "difficulty": "hard",
         "scenario_id": "hard_13"
     },
@@ -123,7 +123,7 @@ HARD_SCENARIOS = [
         "ground_truth_type": "database",
         "ground_truth_file": "backup_manager.py",
         "ground_truth_fix": "Fix backup snapshot consistency and implement proper transaction log replay",
-        "repo_modules": ["backup_manager.py", "database.py", "transaction_manager.py", "recovery.py", "replication_manager.py", "models.py", "utils.py", "config.py", "monitoring.py", "logging.py", "api.py", "middleware.py", "validation.py", "metrics.py", "storage.py", "health_check.py", "threading.py", "queue.py", "security.py"],
+        "repo_modules": ["backup_manager.py", "database.py", "transaction_manager.py", "recovery.py", "replication_manager.py", "models.py", "utils.py", "config.py", "monitoring.py", "logging.py", "api.py", "middleware.py", "validation.py", "metrics.py", "storage.py", "health_check.py", "threading.py", "queue.py", "security.py", "snapshot_manager.py", "log_replay.py"],
         "difficulty": "hard",
         "scenario_id": "hard_14"
     }
