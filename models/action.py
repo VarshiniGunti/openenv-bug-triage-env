@@ -33,11 +33,9 @@ class BugAction(BaseModel):
     @field_validator("bug_type")
     @classmethod
     def validate_bug_type(cls, v: str) -> str:
-        """Validate that bug_type is non-empty and in controlled vocabulary."""
+        """Validate that bug_type is non-empty."""
         if not v or not v.strip():
             raise ValueError("bug_type must be non-empty")
-        if v not in BUG_TYPES:
-            raise ValueError(f"bug_type must be one of {BUG_TYPES}, got '{v}'")
         return v
     
     @field_validator("file")
@@ -51,11 +49,9 @@ class BugAction(BaseModel):
     @field_validator("fix")
     @classmethod
     def validate_fix(cls, v: str) -> str:
-        """Validate that fix is non-empty and has minimum length."""
+        """Validate that fix is non-empty."""
         if not v or not v.strip():
             raise ValueError("fix must be non-empty")
-        if len(v.strip()) < 5:
-            raise ValueError("fix must be at least 5 characters long")
         return v
     
     class Config:

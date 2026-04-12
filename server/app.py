@@ -86,8 +86,10 @@ class BugTriageEnvironment(Environment):
         if self._current_scenario is None:
             return BugObservation(
                 bug_report="No active episode. Call reset() first.",
-                repo_modules=[],
+                repo_modules=["main.py"],
                 previous_actions=[],
+                reward=0.0,
+                done=True,
             )
 
         self._state.step_count += 1
@@ -112,6 +114,8 @@ class BugTriageEnvironment(Environment):
             bug_report=self._current_scenario.bug_report,
             repo_modules=self._current_scenario.repo_modules,
             previous_actions=self._previous_actions.copy(),
+            reward=reward,
+            done=done,
         )
 
     @property

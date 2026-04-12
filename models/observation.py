@@ -10,14 +10,6 @@ if TYPE_CHECKING:
 class BugObservation(BaseModel):
     """
     Represents the observation provided to an agent at each step.
-    
-    Attributes:
-        bug_report: A textual description of the bug or issue
-        repo_modules: List of file paths or module names in the codebase
-        previous_actions: List of previous actions taken in this episode (as strings)
-        triage_hint: Guidance on the bug triage workflow without leaking answers
-        module_descriptions: Descriptions of what each module does (helps agent reasoning)
-        last_action: The most recent action taken by the agent (for reasoning consistency)
     """
     
     bug_report: str = Field(..., description="Textual description of the bug")
@@ -35,6 +27,9 @@ class BugObservation(BaseModel):
         default=None,
         description="The most recent action taken by the agent (echoed for reasoning consistency)"
     )
+    # Required by openenv-core serialization
+    reward: float = Field(default=0.0, description="Reward from the last step")
+    done: bool = Field(default=False, description="Whether the episode is done")
     
     @field_validator("bug_report")
     @classmethod
