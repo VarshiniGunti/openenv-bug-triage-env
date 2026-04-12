@@ -12,6 +12,10 @@ class EasyGrader:
     Reward: 0.3 for correct bug_type, 0.0 otherwise.
     """
     
+    def __init__(self):
+        """Initialize the EasyGrader."""
+        pass
+    
     def grade(self, action: BugAction, scenario: BugScenario, step: int) -> float:
         """
         Grade an action for the Easy task.

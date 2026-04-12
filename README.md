@@ -25,7 +25,7 @@ Bug triage is a critical software engineering task where developers analyze bug 
 - **42 diverse bug scenarios** across three difficulty levels
 - **8 bug type categories** covering common production issues
 - **Multi-step reasoning workflow** mirroring real developer processes
-- **Robust evaluation system** with semantic understanding and partial credit
+- **Robust evaluation system** with semantic understanding and partial credit.
 - **LLM-friendly normalization** for improved agent compatibility
 
 ## 🚀 Key Features
@@ -165,7 +165,123 @@ pytest tests/test_env.py -v
 pytest tests/test_normalization.py::test_bug_type_normalization -v
 ```
 
+## ✅ Submission Validation
+
+### Automated Validation Scripts
+
+Two validation scripts are provided to verify your submission:
+
+#### Python Validator (Windows-Compatible)
+
+```bash
+# Validate submission with HF Space URL
+python scripts/validate_submission.py https://varshini28-openenv-bug-triage-env.hf.space .
+
+# Output:
+# [START] Pinging HF Space...
+# [PASSED] HF Space is live and responds to /reset
+# [PASSED] Docker check skipped (will be validated on deployment)
+# [PASSED] openenv validate passed
+# [END] All 3/3 checks passed!
+```
+
+#### Bash Validator (Linux/macOS)
+
+```bash
+# Make script executable
+chmod +x scripts/validate-submission.sh
+
+# Run validation
+./scripts/validate-submission.sh https://varshini28-openenv-bug-triage-env.hf.space .
+```
+
+### What the Validators Check
+
+1. **HF Space Connectivity**: Verifies your Space is live and responding to `/reset` endpoint
+2. **Docker Build**: Ensures Dockerfile builds successfully (skipped if Docker daemon not running)
+3. **OpenEnv Validation**: Runs `openenv validate` to check environment compliance
+
+### Local Verification
+
+```bash
+# Quick verification of environment structure
+python verify_submission.py
+
+# Output:
+# [1] Checking required files... [OK]
+# [2] Checking required directories... [OK]
+# [3] Checking openenv.yaml structure... [OK]
+# [4] Checking graders... [OK]
+# [5] Checking FastAPI app... [OK]
+# [6] Checking grader scores... [OK]
+# [7] Checking baseline agent... [OK]
+# [8] Checking Dockerfile... [OK]
+# [PASS] ALL CHECKS PASSED (8/8)
+```
+
 ## 🤖 Running Inference
+
+### Grader Classes
+
+All grader classes are now fully instantiable with proper `__init__` methods:
+
+**EasyGrader**
+```python
+from graders.easy_grader import EasyGrader
+
+grader = EasyGrader()  # Instantiable
+reward = grader.grade(action, scenario, step=1)
+```
+
+**MediumGrader**
+```python
+from graders.medium_grader import MediumGrader
+
+grader = MediumGrader()  # Instantiable
+reward = grader.grade(action, scenario, step=2)
+```
+
+**HardGrader**
+```python
+from graders.hard_grader import HardGrader
+
+grader = HardGrader()  # Instantiable
+reward = grader.grade(action, scenario, step=3)
+```
+
+### Task JSON Configuration
+
+Each task JSON file now includes the full grader class path for validator compatibility:
+
+**task1.json** (Easy)
+```json
+{
+  "id": "easy_bug",
+  "grader": "graders.easy_grader.EasyGrader",
+  "input": "Login fails for users with special characters in their password",
+  "expected_output": "Add proper escaping for special characters in password validation"
+}
+```
+
+**task2.json** (Medium)
+```json
+{
+  "id": "medium_bug",
+  "grader": "graders.medium_grader.MediumGrader",
+  "input": "API returns timeout errors when database is under heavy load",
+  "expected_output": "Implement connection pooling with configurable timeout and retry logic"
+}
+```
+
+**task3.json** (Hard)
+```json
+{
+  "id": "hard_bug",
+  "grader": "graders.hard_grader.HardGrader",
+  "input": "Application memory usage grows continuously over time, eventually causing out-of-memory errors",
+  "expected_output": "Implement proper cache eviction policy with TTL and add cleanup handlers for event listeners"
+}
+```
 
 ### With OpenAI API
 
@@ -426,11 +542,17 @@ The inference script produces structured logs:
 
 ## 🏗️ Project Structure
 
+```
+openenv-bug-triage-env/
 ├── Dockerfile                # Docker configuration for HuggingFace Spaces
 ├── inference.py              # Inference script (OpenAI-compatible API)
 ├── pyproject.toml            # PEP 621 project configuration
 ├── README.md                 # This file
 ├── openenv.yaml              # OpenEnv configuration
+│
+├── scripts/                  # Validation and utility scripts
+│   ├── validate-submission.sh    # Bash validator script
+│   └── validate_submission.py    # Python validator script (Windows-compatible)
 │
 ├── core/                     # Core package with utilities
 │   ├── __init__.py
@@ -454,9 +576,9 @@ The inference script produces structured logs:
 │   ├── easy_task.py         # Easy task implementation
 │   ├── medium_task.py       # Medium task implementation
 │   ├── hard_task.py         # Hard task implementation
-│   ├── task1.json           # Easy task (authentication bug)
-│   ├── task2.json           # Medium task (database bug)
-│   └── task3.json           # Hard task (memory leak)
+│   ├── task1.json           # Easy task (authentication bug) with grader path
+│   ├── task2.json           # Medium task (database bug) with grader path
+│   └── task3.json           # Hard task (memory leak) with grader path
 │
 ├── models/                   # Pydantic data models
 │   ├── __init__.py
@@ -465,11 +587,11 @@ The inference script produces structured logs:
 │   ├── scenario.py           # BugScenario model
 │   └── config.py             # Config model
 │
-├── graders/                  # Grading logic
+├── graders/                  # Grading logic (instantiable classes)
 │   ├── __init__.py
-│   ├── easy_grader.py        # Easy task grader
-│   ├── medium_grader.py      # Medium task grader
-│   └── hard_grader.py        # Hard task grader
+│   ├── easy_grader.py        # Easy task grader with __init__
+│   ├── medium_grader.py      # Medium task grader with __init__
+│   └── hard_grader.py        # Hard task grader with __init__
 │
 ├── utils/                    # Utility functions
 │   ├── __init__.py
@@ -481,6 +603,7 @@ The inference script produces structured logs:
     ├── test_graders.py
     ├── test_models.py
     └── test_normalization.py
+```
 
 ## 📊 Performance Metrics
 
@@ -508,7 +631,15 @@ Logs are saved to `logs/` directory with ISO 8601 timestamps.
 
 The HuggingFace Space has been tested and verified to be fully functional. All API endpoints are responding correctly and the environment is ready for production use and hackathon submission.
 
-**Last Updated**: April 9, 2026
+**Last Updated**: April 12, 2026
+
+### Recent Changes (Phase 2 Validation Fix)
+
+- ✅ Added `__init__` methods to all grader classes (EasyGrader, MediumGrader, HardGrader)
+- ✅ Updated task JSON files with full grader class paths (`graders.*.*.ClassName`)
+- ✅ Added validation scripts (Python and Bash versions)
+- ✅ Fixed grader instantiation for validator compliance
+- ✅ All graders now properly instantiable from openenv.yaml
 
 ### Live Space URL
 - **Space**: https://huggingface.co/spaces/Varshini28/openenv-bug-triage-env

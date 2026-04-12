@@ -14,6 +14,10 @@ class MediumGrader:
     Total normalized reward: [0.0, 1.0]
     """
     
+    def __init__(self):
+        """Initialize the MediumGrader."""
+        pass
+    
     def grade(self, action: BugAction, scenario: BugScenario, step: int) -> float:
         """
         Grade an action for the Medium task.

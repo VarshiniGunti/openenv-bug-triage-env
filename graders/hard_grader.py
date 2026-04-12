@@ -27,6 +27,10 @@ class HardGrader:
         'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they'
     }
     
+    def __init__(self):
+        """Initialize the HardGrader."""
+        pass
+    
     def extract_keywords(self, text: str) -> set:
         """
         Extract meaningful keywords from text.
