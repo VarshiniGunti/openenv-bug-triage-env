@@ -4,21 +4,17 @@ import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from models.action import BugAction
-from models.scenario import BugScenario
+from openenv.core.rubrics.base import Rubric
+from utils.normalization import normalize_bug_type, normalize_file, normalize_fix_text
 
 
-class HardGrader:
+class HardGrader(Rubric):
     """
     Grader for Hard task difficulty.
-    
-    Step 1: Evaluates bug_type (0.3 reward)
-    Step 2: Evaluates file (0.3 reward)
-    Step 3: Evaluates fix using keyword matching (0.4 reward)
-    Total normalized reward: [0.0, 1.0]
+    Extends openenv-core Rubric for validator compatibility.
+    Step 1: bug_type, Step 2: file, Step 3: fix (semantic).
     """
-    
-    # Common stopwords to exclude from keyword matching
+
     STOPWORDS = {
         'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
         'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were', 'be', 'been',
@@ -26,10 +22,47 @@ class HardGrader:
         'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that',
         'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they'
     }
-    
+
     def __init__(self):
         """Initialize the HardGrader."""
-        pass
+        super().__init__()
+
+    def forward(self, action, observation) -> float:
+        """
+        Compute reward from action and observation.
+        Called by the openenv-core validator via grader(action, observation).
+        """
+        try:
+            if hasattr(action, "bug_type"):
+                bug_type = normalize_bug_type(str(action.bug_type))
+                file_val = normalize_file(str(action.file))
+                fix_val = normalize_fix_text(str(action.fix))
+            elif isinstance(action, dict):
+                bug_type = normalize_bug_type(str(action.get("bug_type", "")))
+                file_val = normalize_file(str(action.get("file", "")))
+                fix_val = normalize_fix_text(str(action.get("fix", "")))
+            else:
+                return 0.35
+
+            if hasattr(observation, "ground_truth_type"):
+                gt_type = normalize_bug_type(str(observation.ground_truth_type))
+                gt_file = normalize_file(str(observation.ground_truth_file))
+                gt_fix = normalize_fix_text(str(observation.ground_truth_fix))
+            elif isinstance(observation, dict):
+                gt_type = normalize_bug_type(str(observation.get("ground_truth_type", "")))
+                gt_file = normalize_file(str(observation.get("ground_truth_file", "")))
+                gt_fix = normalize_fix_text(str(observation.get("ground_truth_fix", "")))
+            else:
+                return 0.35
+
+            score = 0.0
+            score += 0.35 if bug_type == gt_type else 0.05
+            score += 0.35 if file_val == gt_file else 0.05
+            fix_score = self.combined_fix_match(fix_val, gt_fix)
+            score += 0.05 + (0.9 * fix_score) * 0.4
+            return min(max(score / 3, 0.05), 0.95)
+        except Exception:
+            return 0.35
     
     def extract_keywords(self, text: str) -> set:
         """

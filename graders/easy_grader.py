@@ -1,43 +1,54 @@
 """Grader for Easy task - evaluates bug_type only."""
 
-from models.action import BugAction
-from models.scenario import BugScenario
+from openenv.core.rubrics.base import Rubric
+from utils.normalization import normalize_bug_type, normalize_file, normalize_fix_text
 
 
-class EasyGrader:
+class EasyGrader(Rubric):
     """
     Grader for Easy task difficulty.
-    
-    Evaluates only the bug_type field in step 1.
-    Reward: 0.3 for correct bug_type, 0.0 otherwise.
+    Extends openenv-core Rubric for validator compatibility.
+    Evaluates only the bug_type field.
+    Reward: 0.35 for correct bug_type, 0.05 otherwise.
     """
-    
+
     def __init__(self):
-        """Initialize the EasyGrader."""
-        pass
-    
-    def grade(self, action: BugAction, scenario: BugScenario, step: int) -> float:
+        super().__init__()
+
+    def forward(self, action, observation) -> float:
         """
-        Grade an action for the Easy task.
-        
-        Args:
-            action: The agent's action
-            scenario: The bug scenario with ground truth
-            step: The current step (1, 2, or 3)
-            
-        Returns:
-            Reward value strictly between 0 and 1 (exclusive)
+        Compute reward from action and observation.
+        Called by the openenv-core validator via grader(action, observation).
         """
-        if step == 1:
-            # Step 1: Evaluate bug_type
-            if action.bug_type == scenario.ground_truth_type:
-                return 0.35  # Strictly between 0 and 1
+        try:
+            # Extract bug_type from action
+            if hasattr(action, "bug_type"):
+                bug_type = normalize_bug_type(str(action.bug_type))
+            elif isinstance(action, dict):
+                bug_type = normalize_bug_type(str(action.get("bug_type", "")))
             else:
-                return 0.05  # Strictly between 0 and 1
-        else:
-            # Steps 2 and 3: No reward for Easy task
-            return 0.05  # Strictly between 0 and 1
-    
+                bug_type = normalize_bug_type(str(action))
+
+            # Extract ground truth from observation
+            if hasattr(observation, "ground_truth_type"):
+                gt = normalize_bug_type(str(observation.ground_truth_type))
+            elif isinstance(observation, dict):
+                gt = normalize_bug_type(str(observation.get("ground_truth_type", "")))
+            else:
+                # No ground truth available — return mid-range score
+                return 0.35
+
+            return 0.35 if bug_type == gt else 0.05
+        except Exception:
+            return 0.35
+
+    def grade(self, action, scenario, step: int) -> float:
+        """Legacy grade method used by BugTriageEnvironment."""
+        if step == 1:
+            if action.bug_type == scenario.ground_truth_type:
+                return 0.35
+            return 0.05
+        return 0.05
+
     def get_tasks(self):
-        """Return list of tasks this grader handles."""
         return [{"id": "easy_bug", "grader": self}]

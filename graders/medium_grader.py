@@ -1,51 +1,65 @@
 """Grader for Medium task - evaluates bug_type and file."""
 
-from models.action import BugAction
-from models.scenario import BugScenario
+from openenv.core.rubrics.base import Rubric
+from utils.normalization import normalize_bug_type, normalize_file
 
 
-class MediumGrader:
+class MediumGrader(Rubric):
     """
     Grader for Medium task difficulty.
-    
-    Step 1: Evaluates bug_type (0.3 reward)
-    Step 2: Evaluates file (0.3 reward)
-    Step 3: No reward
-    Total normalized reward: [0.0, 1.0]
+    Extends openenv-core Rubric for validator compatibility.
+    Step 1: bug_type, Step 2: file.
+    Reward: 0.35 per correct field, 0.05 otherwise.
     """
-    
+
     def __init__(self):
-        """Initialize the MediumGrader."""
-        pass
-    
-    def grade(self, action: BugAction, scenario: BugScenario, step: int) -> float:
+        super().__init__()
+
+    def forward(self, action, observation) -> float:
         """
-        Grade an action for the Medium task.
-        
-        Args:
-            action: The agent's action
-            scenario: The bug scenario with ground truth
-            step: The current step (1, 2, or 3)
-            
-        Returns:
-            Reward value strictly between 0 and 1 (exclusive)
+        Compute reward from action and observation.
+        Called by the openenv-core validator via grader(action, observation).
         """
+        try:
+            if hasattr(action, "bug_type"):
+                bug_type = normalize_bug_type(str(action.bug_type))
+                file_val = normalize_file(str(action.file))
+            elif isinstance(action, dict):
+                bug_type = normalize_bug_type(str(action.get("bug_type", "")))
+                file_val = normalize_file(str(action.get("file", "")))
+            else:
+                return 0.35
+
+            if hasattr(observation, "ground_truth_type"):
+                gt_type = normalize_bug_type(str(observation.ground_truth_type))
+                gt_file = normalize_file(str(observation.ground_truth_file))
+            elif isinstance(observation, dict):
+                gt_type = normalize_bug_type(str(observation.get("ground_truth_type", "")))
+                gt_file = normalize_file(str(observation.get("ground_truth_file", "")))
+            else:
+                return 0.35
+
+            score = 0.0
+            if bug_type == gt_type:
+                score += 0.35
+            else:
+                score += 0.05
+            if file_val == gt_file:
+                score += 0.35
+            else:
+                score += 0.05
+            # Return average to stay in (0,1)
+            return min(max(score / 2, 0.05), 0.95)
+        except Exception:
+            return 0.35
+
+    def grade(self, action, scenario, step: int) -> float:
+        """Legacy grade method used by BugTriageEnvironment."""
         if step == 1:
-            # Step 1: Evaluate bug_type
-            if action.bug_type == scenario.ground_truth_type:
-                return 0.35  # Strictly between 0 and 1
-            else:
-                return 0.05  # Strictly between 0 and 1
+            return 0.35 if action.bug_type == scenario.ground_truth_type else 0.05
         elif step == 2:
-            # Step 2: Evaluate file
-            if action.file == scenario.ground_truth_file:
-                return 0.35  # Strictly between 0 and 1
-            else:
-                return 0.05  # Strictly between 0 and 1
-        else:
-            # Step 3: No reward for Medium task
-            return 0.05  # Strictly between 0 and 1
-    
+            return 0.35 if action.file == scenario.ground_truth_file else 0.05
+        return 0.05
+
     def get_tasks(self):
-        """Return list of tasks this grader handles."""
         return [{"id": "medium_bug", "grader": self}]
