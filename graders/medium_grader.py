@@ -1,5 +1,7 @@
 """Grader for Medium task - evaluates bug_type and file."""
 
+from models.action import BugAction
+from models.scenario import BugScenario
 from utils.normalization import normalize_bug_type, normalize_file
 
 

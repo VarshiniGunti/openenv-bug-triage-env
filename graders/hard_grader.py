@@ -1,9 +1,16 @@
 """Grader for Hard task - evaluates bug_type, file, and fix with semantic + keyword matching."""
 
 import re
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+
+from models.action import BugAction
+from models.scenario import BugScenario
 from utils.normalization import normalize_bug_type, normalize_file, normalize_fix_text
 
 
@@ -118,6 +125,8 @@ class HardGrader:
             Similarity score strictly between 0 and 1 (exclusive)
         """
         try:
+            if not SKLEARN_AVAILABLE:
+                return 0.9 if self.keyword_match(action_fix, ground_truth_fix) else 0.1
             # Use character-level n-grams for semantic similarity
             vectorizer = TfidfVectorizer(analyzer='char', ngram_range=(2, 3))
             vectors = vectorizer.fit_transform([action_fix, ground_truth_fix])

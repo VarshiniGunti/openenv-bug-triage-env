@@ -1,5 +1,7 @@
 """Grader for Easy task - evaluates bug_type only."""
 
+from models.action import BugAction
+from models.scenario import BugScenario
 from utils.normalization import normalize_bug_type
 
 
