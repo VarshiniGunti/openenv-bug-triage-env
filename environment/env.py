@@ -1,14 +1,9 @@
 """OpenEnv Bug Triage Environment implementation."""
 
 import random
-import sys
-import os
 import json
 import importlib
 from typing import Tuple, Dict, Any, Optional, List
-
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models.observation import BugObservation
 from models.action import BugAction
@@ -19,7 +14,9 @@ from graders import EasyGrader, MediumGrader, HardGrader
 try:
     from core.logging_config import get_logger
 except ImportError:
-    from logging_config import get_logger
+    import logging
+    def get_logger():
+        return logging.getLogger(__name__)
 from utils.normalization import normalize_bug_type, normalize_file, normalize_fix_text
 
 

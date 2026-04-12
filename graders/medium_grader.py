@@ -1,11 +1,5 @@
 """Grader for Medium task - evaluates bug_type and file."""
 
-import sys
-import os
-
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from models.action import BugAction
 from models.scenario import BugScenario
 
@@ -47,3 +41,7 @@ class MediumGrader:
         else:
             # Step 3: No reward for Medium task
             return 0.05  # Strictly between 0 and 1
+    
+    def get_tasks(self):
+        """Return list of tasks this grader handles."""
+        return [{"id": "medium_bug", "grader": self}]

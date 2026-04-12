@@ -1,13 +1,8 @@
 """Grader for Hard task - evaluates bug_type, file, and fix with semantic + keyword matching."""
 
 import re
-import sys
-import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models.action import BugAction
 from models.scenario import BugScenario
@@ -169,3 +164,7 @@ class HardGrader:
             return 0.05 + (0.9 * match_score)
         else:
             return 0.05
+    
+    def get_tasks(self):
+        """Return list of tasks this grader handles."""
+        return [{"id": "hard_bug", "grader": self}]

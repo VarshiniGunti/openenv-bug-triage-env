@@ -19,36 +19,10 @@ try:
 except ImportError:
     from logging_config import get_logger
 
-# Print working directory for debugging
-print(f"Current working dir: {os.getcwd()}", flush=True, file=sys.stderr)
-
-# Load OpenEnv configuration
-def load_openenv_config():
-    """Load openenv.yaml configuration from repo root."""
-    path = os.path.join(os.getcwd(), "openenv.yaml")
-    try:
-        with open(path, "r") as f:
-            config = yaml.safe_load(f)
-        print(f"Loaded OpenEnv config from {path}", flush=True, file=sys.stderr)
-        return config
-    except Exception as e:
-        print(f"Warning: Could not load openenv.yaml from {path}: {e}", flush=True, file=sys.stderr)
-        return None
-
-# Load config at startup
-OPENENV_CONFIG = load_openenv_config()
-if OPENENV_CONFIG:
-    print(f"Loaded OpenEnv config: {OPENENV_CONFIG}", flush=True, file=sys.stderr)
-
 # Read API environment variables
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
 HF_TOKEN = os.getenv("HF_TOKEN", "")
-
-print(f"API_BASE_URL: {API_BASE_URL}", flush=True, file=sys.stderr)
-print(f"MODEL_NAME: {MODEL_NAME}", flush=True, file=sys.stderr)
-
-
 
 app = FastAPI(
     title="OpenEnv Bug Triage Environment",
@@ -301,14 +275,7 @@ else:
         print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
     
     def parse_llm_response(llm_response: str) -> Optional[dict]:
-        """Parse LLM response to extract bug_type, file, fix.
-        
-        Args:
-            llm_response: Raw text response from LLM
-            
-        Returns:
-            Dictionary with 'bug_type', 'file', 'fix' keys if parsing succeeds, None otherwise
-        """
+        """Parse LLM response to extract bug_type, file, fix."""
         if not llm_response:
             return None
         

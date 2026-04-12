@@ -5,7 +5,21 @@ entrypoint: inference.py
 tasks:
   - id: easy_bug
     grader: graders.easy_grader.EasyGrader
+    description: "Easy bug triage task - classify bug type only"
   - id: medium_bug
     grader: graders.medium_grader.MediumGrader
+    description: "Medium bug triage task - classify bug type and file location"
   - id: hard_bug
     grader: graders.hard_grader.HardGrader
+    description: "Hard bug triage task - classify bug type, file location, and propose fix"
+
+graders:
+  - id: easy_grader
+    class: graders.easy_grader.EasyGrader
+    description: "Grader for easy-level bug triage tasks"
+  - id: medium_grader
+    class: graders.medium_grader.MediumGrader
+    description: "Grader for medium-level bug triage tasks"
+  - id: hard_grader
+    class: graders.hard_grader.HardGrader
+    description: "Grader for hard-level bug triage tasks"
