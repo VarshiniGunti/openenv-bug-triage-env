@@ -46,12 +46,17 @@ class MediumGrader:
     def __call__(self, action, observation) -> float:
         return self.forward(action, observation)
 
-    def grade(self, action, scenario, step: int) -> float:
-        """Legacy grade method used by BugTriageEnvironment."""
-        if step == 1:
-            return 0.35 if action.bug_type == scenario.ground_truth_type else 0.05
-        elif step == 2:
-            return 0.35 if action.file == scenario.ground_truth_file else 0.05
+    def grade(self, action, scenario_or_obs=None, step: int = 1) -> float:
+        """Grade method - supports both 2-arg and 3-arg calling conventions."""
+        if scenario_or_obs is None:
+            return 0.35
+        try:
+            if step == 1:
+                return 0.35 if action.bug_type == scenario_or_obs.ground_truth_type else 0.05
+            elif step == 2:
+                return 0.35 if action.file == scenario_or_obs.ground_truth_file else 0.05
+        except Exception:
+            return self.forward(action, scenario_or_obs)
         return 0.05
 
     def get_tasks(self):

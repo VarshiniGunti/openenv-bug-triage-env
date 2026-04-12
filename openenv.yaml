@@ -1,22 +1,33 @@
 name: openenv-bug-triage-env
-version: "1.0"
+version: "1.0.0"
 spec_version: 1
 type: space
 runtime: fastapi
 app: server.app:app
 port: 7860
 entrypoint: inference.py
+description: >
+  An OpenEnv environment where an AI agent triages software bugs.
+  Tasks range from simple bug classification to full root-cause analysis and fix proposals.
 
 tasks:
   - id: easy_bug
+    name: easy_bug
+    difficulty: easy
+    description: "Classify the bug type from the bug report"
     grader: graders.easy_grader.EasyGrader
-    description: "Easy bug triage - classify bug type"
+
   - id: medium_bug
+    name: medium_bug
+    difficulty: medium
+    description: "Classify the bug type and identify the affected file"
     grader: graders.medium_grader.MediumGrader
-    description: "Medium bug triage - classify bug type and file"
+
   - id: hard_bug
+    name: hard_bug
+    difficulty: hard
+    description: "Classify bug type, identify file, and propose a fix"
     grader: graders.hard_grader.HardGrader
-    description: "Hard bug triage - classify bug type, file, and fix"
 
 graders:
   - id: easy_grader
@@ -25,3 +36,14 @@ graders:
     class: graders.medium_grader.MediumGrader
   - id: hard_grader
     class: graders.hard_grader.HardGrader
+
+endpoints:
+  reset: POST /reset
+  step:  POST /step
+  state: GET  /state
+  tasks: GET  /tasks
+  grader: POST /grader
+
+settings:
+  max_steps: 3
+  n_tasks: 3
