@@ -31,10 +31,21 @@ Bug triage is a critical software engineering task where developers analyze bug 
 ## 🚀 Key Features
 
 ### Core Environment
-- **OpenEnv API Compliance**: Implements standard `reset()`, `step()`, and `state()` methods
+- **openenv-core `create_app`**: Server built using the official openenv-core factory — auto-generates all required endpoints
+- **OpenEnv API Compliance**: Implements standard `reset()`, `step()`, and `state()` methods via `Environment` interface
 - **Three Task Difficulties**: Easy, Medium, and Hard with progressively complex scenarios
 - **Multi-Step Episodes**: 3-step episodes with cumulative rewards normalized to [0.0, 1.0]
 - **Deterministic Grading**: Consistent evaluation across runs
+
+### Auto-Generated Endpoints (via openenv-core)
+- `/health` — health check
+- `/metadata` — environment name and description
+- `/schema` — action, observation, and state schemas
+- `/mcp` — JSON-RPC 2.0 endpoint
+- `/reset` — start a new episode
+- `/step` — execute an action
+- `/state` — current episode state
+- `/ws` — WebSocket for persistent sessions
 
 ### Robust Evaluation
 - **Action Normalization**: Handles LLM output variations (case, spacing, punctuation)
@@ -456,149 +467,111 @@ The environment tracks `last_action` to ensure consistency across steps and rewa
 
 ## ⚙️ OpenEnv Configuration
 
-The environment is configured via `openenv.yaml`:
+`openenv.yaml` follows the reference project format:
 
 ```yaml
-task: easy              # Task difficulty: easy, medium, hard
-max_steps: 3            # Steps per episode
-seed: 42                # Random seed (optional)
-```
-
-You can also configure via environment variables or programmatically:
-
-```python
-from models.config import Config
-
-config = Config(
-    task="medium",
-    max_steps=3,
-    seed=123
-)
-env = BugTriageEnv(config)
+name: openenv-bug-triage-env
+version: "1.0"
+spec_version: 1
+type: space
+runtime: fastapi
+app: server.app:app
+port: 7860
+entrypoint: inference.py
 ```
 
 ## 🏆 Hackathon Compliance
 
 ### OpenEnv API Compliance
 
-This project fully implements the OpenEnv API specification:
+This project fully implements the OpenEnv API specification using `openenv-core`'s `create_app`:
 
-✓ `reset()` - Returns initial observation
-✓ `step(action)` - Executes action and returns (observation, reward, done, info)
-✓ `state()` - Returns current environment state
-✓ Deterministic grading with reproducible results
+✓ `Environment` interface implemented (`reset()`, `step()`, `state`)
+✓ `/metadata` — name and description
+✓ `/schema` — action, observation, state schemas
+✓ `/mcp` — JSON-RPC 2.0 endpoint
+✓ `/health` — health check
+✓ `/reset`, `/step`, `/state` — simulation endpoints
 ✓ Normalized rewards in [0.0, 1.0] range
 ✓ Multi-step episodes with cumulative rewards
-
-### Submission Requirements
-
-- ✓ OpenEnv environment implementation
-- ✓ Three task difficulties (Easy, Medium, Hard)
-- ✓ 42 diverse bug scenarios (14 per difficulty)
-- ✓ Comprehensive test suite
-- ✓ Docker containerization
-- ✓ Inference script with LLM integration
-- ✓ Professional documentation
-- ✓ Type hints and validation
-- ✓ Robust evaluation features
-
-### Running Validation
-
-```bash
-# Verify environment structure
-python verify.py
-
-# Run test suite
-pytest tests/ -v
-
-# Build Docker image
-docker build -t bug-triage-env:latest .
-
-# Run inference
-export API_BASE_URL="https://api.openai.com/v1"
-export MODEL_NAME="gpt-3.5-turbo"
-python inference.py --task easy --episodes 1
-```
+✓ `openenv validate` passes locally
 
 ### Environment Variables
 
 The inference script uses these environment variables:
 
-- `API_BASE_URL`: OpenAI-compatible API endpoint (required)
-- `MODEL_NAME`: Model name to use (required)
-- `HF_TOKEN`: HuggingFace token (optional, for authentication)
+| Variable | Default | Required |
+|----------|---------|----------|
+| `API_BASE_URL` | `https://api.openai.com/v1` | No (has default) |
+| `MODEL_NAME` | `gpt-4.1-mini` | No (has default) |
+| `HF_TOKEN` | — | Yes |
 
-### Logging Output
-
-The inference script produces structured logs:
+### Inference Output Format
 
 ```
-[START] task=easy env=bug_triage_env model=gpt-3.5-turbo
-[STEP] step=1 action=bug_type=null_pointer, file=auth.py reward=0.30 done=false error=null
-[STEP] step=2 action=bug_type=null_pointer, file=auth.py reward=0.00 done=false error=null
-[STEP] step=3 action=bug_type=null_pointer, file=auth.py reward=0.40 done=true error=null
-[END] success=true steps=3 score=0.70 rewards=0.30,0.00,0.40
+[START] task=easy env=openenv-bug-triage-env model=gpt-4.1-mini
+[STEP] step=1 action=logic reward=0.05 done=false error=null
+[STEP] step=2 action=logic reward=0.05 done=false error=null
+[STEP] step=3 action=logic reward=0.05 done=true error=null
+[END] success=false steps=3 rewards=0.05,0.05,0.05
 ```
 
 ## 🏗️ Project Structure
 
 ```
 openenv-bug-triage-env/
-├── Dockerfile                # Docker configuration for HuggingFace Spaces
-├── inference.py              # Inference script (OpenAI-compatible API)
-├── pyproject.toml            # PEP 621 project configuration
+├── Dockerfile                # Docker — runs server.app:app on port 7860
+├── inference.py              # Inference script + re-exports server.app:app for uvicorn
+├── pyproject.toml            # Project config with [project.scripts] server entry
+├── openenv.yaml              # OpenEnv config (spec_version: 1, app: server.app:app)
 ├── README.md                 # This file
-├── openenv.yaml              # OpenEnv configuration
 │
-├── scripts/                  # Validation and utility scripts
-│   ├── validate-submission.sh    # Bash validator script
-│   └── validate_submission.py    # Python validator script (Windows-compatible)
-│
-├── core/                     # Core package with utilities
+├── server/                   # FastAPI server using openenv-core create_app
 │   ├── __init__.py
-│   ├── env.py               # BugTriageEnv class with reset/step/state
-│   ├── config_manager.py    # Configuration management
-│   ├── logging_config.py    # Logging setup
-│   ├── verify.py            # Environment verification script
-│   └── verify_submission.py # Submission verification script
+│   └── app.py               # BugTriageEnvironment + create_app() + main()
 │
-├── environment/              # OpenEnv environment implementation
+├── scripts/                  # Validation scripts
+│   ├── validate-submission.sh    # Bash validator
+│   └── validate_submission.py    # Python validator (Windows-compatible)
+│
+├── environment/              # Environment logic
 │   ├── __init__.py
-│   ├── env.py               # Environment wrapper
-│   └── grader.py            # Dynamic grader with variable scoring
+│   ├── env.py               # BugTriageEnv (used by inference.py directly)
+│   └── grader.py            # Dynamic grader loader
 │
 ├── baseline/                 # Baseline agent
 │   ├── __init__.py
-│   └── baseline_agent.py     # Reference agent implementation
+│   └── baseline_agent.py
 │
 ├── tasks/                    # Task definitions
 │   ├── __init__.py
-│   ├── easy_task.py         # Easy task implementation
-│   ├── medium_task.py       # Medium task implementation
-│   ├── hard_task.py         # Hard task implementation
-│   ├── task1.json           # Easy task (authentication bug) with grader path
-│   ├── task2.json           # Medium task (database bug) with grader path
-│   └── task3.json           # Hard task (memory leak) with grader path
+│   ├── easy_task.py
+│   ├── medium_task.py
+│   ├── hard_task.py
+│   ├── task1.json           # Easy task with full grader class path
+│   ├── task2.json           # Medium task with full grader class path
+│   └── task3.json           # Hard task with full grader class path
 │
-├── models/                   # Pydantic data models
-│   ├── __init__.py
-│   ├── action.py             # BugAction model
-│   ├── observation.py        # BugObservation model
-│   ├── scenario.py           # BugScenario model
-│   └── config.py             # Config model
+├── models/                   # Pydantic models
+│   ├── action.py             # BugAction (bug_type, file, fix)
+│   ├── observation.py        # BugObservation (includes reward, done for openenv-core)
+│   ├── scenario.py           # BugScenario
+│   └── config.py             # Config
 │
-├── graders/                  # Grading logic (instantiable classes)
+├── graders/                  # Graders with __init__ methods
 │   ├── __init__.py
-│   ├── easy_grader.py        # Easy task grader with __init__
-│   ├── medium_grader.py      # Medium task grader with __init__
-│   └── hard_grader.py        # Hard task grader with __init__
+│   ├── easy_grader.py
+│   ├── medium_grader.py
+│   └── hard_grader.py
 │
-├── utils/                    # Utility functions
-│   ├── __init__.py
+├── utils/
 │   └── normalization.py      # Action normalization
 │
-└── tests/                    # Test suite
-    ├── __init__.py
+├── core/                     # Utilities
+│   ├── logging_config.py
+│   └── verify_submission.py
+│
+└── tests/
     ├── test_env.py
     ├── test_graders.py
     ├── test_models.py
@@ -635,11 +608,15 @@ The HuggingFace Space has been tested and verified to be fully functional. All A
 
 ### Recent Changes (Phase 2 Validation Fix)
 
-- ✅ Added `__init__` methods to all grader classes (EasyGrader, MediumGrader, HardGrader)
-- ✅ Updated task JSON files with full grader class paths (`graders.*.*.ClassName`)
-- ✅ Added validation scripts (Python and Bash versions)
-- ✅ Fixed grader instantiation for validator compliance
-- ✅ All graders now properly instantiable from openenv.yaml
+- ✅ Rebuilt `server/app.py` using `openenv-core`'s `create_app()` — same pattern as reference projects
+- ✅ All required endpoints now auto-generated: `/metadata`, `/schema`, `/mcp`, `/health`, `/reset`, `/step`, `/state`, `/ws`
+- ✅ `BugObservation` now includes `reward` and `done` fields required by openenv-core serializer
+- ✅ `BugAction` validators relaxed — normalization happens internally in graders
+- ✅ `openenv.yaml` updated to reference project format (`spec_version: 1`, `app: server.app:app`)
+- ✅ `Dockerfile` CMD updated to `server.app:app`
+- ✅ `inference.py` re-exports `server.app:app` for uvicorn compatibility
+- ✅ `openenv validate` passes locally
+- ✅ All live endpoints verified: `/health`, `/metadata`, `/schema`, `/mcp`, `/reset`, `/step` all return 200
 
 ### Live Space URL
 - **Space**: https://huggingface.co/spaces/Varshini28/openenv-bug-triage-env
@@ -651,98 +628,18 @@ The HuggingFace Space has been tested and verified to be fully functional. All A
 
 ### Endpoint Test Results
 
-| Endpoint | Method | Status | Response |
-|----------|--------|--------|----------|
-| `/health` | GET | ✅ 200 OK | `{"status": "healthy"}` |
-| `/reset` | POST | ✅ 200 OK | Valid observation with bug report and module list |
-| `/step` | POST | ✅ 200 OK | Reward calculation, action tracking, episode state |
-| `/state` | POST | ✅ 200 OK | Current environment state |
+| Endpoint | Method | Status | Notes |
+|----------|--------|--------|-------|
+| `/health` | GET | ✅ 200 | `{"status":"healthy"}` |
+| `/metadata` | GET | ✅ 200 | name + description |
+| `/schema` | GET | ✅ 200 | action + observation + state schemas |
+| `/mcp` | POST | ✅ 200 | JSON-RPC 2.0 |
+| `/reset` | POST | ✅ 200 | observation + reward + done |
+| `/step` | POST | ✅ 200 | observation + reward + done |
+| `/state` | GET | ✅ 200 | episode state |
+| `/` | GET | ℹ️ 404 | Not registered by create_app (expected) |
 
-### Sample API Response - Root Endpoint
-
-**Request:**
-```bash
-curl https://Varshini28-openenv-bug-triage-env.hf.space/
-```
-
-**Response:**
-```json
-{
-  "message": "OpenEnv Bug Triage Environment Running",
-  "status": "ok",
-  "version": "1.0",
-  "endpoints": {
-    "health": "/health",
-    "reset": "/reset",
-    "step": "/step",
-    "infer": "/infer",
-    "state": "/state",
-    "docs": "/docs"
-  }
-}
-```
-
-### Sample API Response - `/reset` Endpoint
-
-**Request:**
-```bash
-curl -X POST https://Varshini28-openenv-bug-triage-env.hf.space/reset \
-  -H "Content-Type: application/json"
-```
-
-**Response:**
-```json
-{
-  "observation": {
-    "bug_report": "Login fails for users with special characters in their password. Regular passwords work fine.",
-    "repo_modules": ["auth.py", "validation.py", "security.py", "utils.py"],
-    "previous_actions": []
-  }
-}
-```
-
-### Sample API Response - `/step` Endpoint
-
-**Request:**
-```bash
-curl -X POST https://Varshini28-openenv-bug-triage-env.hf.space/step \
-  -H "Content-Type: application/json" \
-  -d '{
-    "bug_type": "authentication",
-    "file": "auth.py",
-    "fix": "Add proper escaping for special characters in password validation"
-  }'
-```
-
-**Response:**
-```json
-{
-  "reward": 0.3,
-  "done": false,
-  "observation": {
-    "bug_report": "Login fails for users with special characters in their password. Regular passwords work fine.",
-    "repo_modules": ["auth.py", "validation.py", "security.py", "utils.py"],
-    "previous_actions": [
-      "step_1: {\"bug_type\":\"authentication\",\"file\":\"auth.py\",\"fix\":\"Add proper escaping for special characters in password validation\"}"
-    ]
-  },
-  "info": {
-    "step": 1,
-    "total_reward": 0.3,
-    "done": false
-  }
-}
-```
-
-### Verification Summary
-
-✓ All endpoints responding with HTTP 200 status
-✓ Correct data structures returned
-✓ Episode state tracking working properly
-✓ Reward calculation functioning correctly
-✓ Action normalization and validation working
-✓ Docker containerization verified on port 7860
-✓ Environment ready for production use
+**Last Updated**: April 12, 2026
 
 ## 🔗 Additional Resources
 
