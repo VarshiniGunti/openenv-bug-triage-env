@@ -151,6 +151,46 @@ app = create_app(
     max_concurrent_envs=1,
 )
 
+# ---------------------------------------------------------------------------
+# Additional endpoints required by the hackathon Phase 2 validator
+# ---------------------------------------------------------------------------
+from fastapi import FastAPI
+from fastapi.routing import APIRoute
+
+@app.get("/tasks")
+def get_tasks():
+    """Return all tasks with grader class paths — required by Phase 2 validator."""
+    return [
+        {
+            "id": "easy_bug",
+            "description": "Easy bug triage - classify bug type",
+            "grader": "graders.easy_grader.EasyGrader",
+            "grader_class": "graders.easy_grader.EasyGrader",
+        },
+        {
+            "id": "medium_bug",
+            "description": "Medium bug triage - classify bug type and file",
+            "grader": "graders.medium_grader.MediumGrader",
+            "grader_class": "graders.medium_grader.MediumGrader",
+        },
+        {
+            "id": "hard_bug",
+            "description": "Hard bug triage - classify bug type, file, and fix",
+            "grader": "graders.hard_grader.HardGrader",
+            "grader_class": "graders.hard_grader.HardGrader",
+        },
+    ]
+
+
+@app.get("/graders")
+def get_graders():
+    """Return all graders — required by Phase 2 validator."""
+    return [
+        {"id": "easy_grader", "class": "graders.easy_grader.EasyGrader"},
+        {"id": "medium_grader", "class": "graders.medium_grader.MediumGrader"},
+        {"id": "hard_grader", "class": "graders.hard_grader.HardGrader"},
+    ]
+
 
 def main(host: str = "0.0.0.0", port: int = 7860):
     """Entry point for the server."""

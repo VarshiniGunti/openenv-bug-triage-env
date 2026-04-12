@@ -6,3 +6,22 @@ runtime: fastapi
 app: server.app:app
 port: 7860
 entrypoint: inference.py
+
+tasks:
+  - id: easy_bug
+    grader: graders.easy_grader.EasyGrader
+    description: "Easy bug triage - classify bug type"
+  - id: medium_bug
+    grader: graders.medium_grader.MediumGrader
+    description: "Medium bug triage - classify bug type and file"
+  - id: hard_bug
+    grader: graders.hard_grader.HardGrader
+    description: "Hard bug triage - classify bug type, file, and fix"
+
+graders:
+  - id: easy_grader
+    class: graders.easy_grader.EasyGrader
+  - id: medium_grader
+    class: graders.medium_grader.MediumGrader
+  - id: hard_grader
+    class: graders.hard_grader.HardGrader
