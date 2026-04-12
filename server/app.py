@@ -3,7 +3,7 @@
 import os
 import sys
 import random
-from typing import Optional, Dict, Any, List
+from typing import Optional, List
 from uuid import uuid4
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -12,7 +12,6 @@ from openenv.core.env_server.interfaces import Environment
 from openenv.core.env_server.types import State
 from openenv.core.env_server.http_server import create_app
 
-from models.config import Config
 from models.action import BugAction
 from models.observation import BugObservation
 from tasks import EASY_SCENARIOS, MEDIUM_SCENARIOS, HARD_SCENARIOS
@@ -21,37 +20,50 @@ from utils.normalization import normalize_bug_type, normalize_file, normalize_fi
 from models.scenario import BugScenario
 
 
+# ---------------------------------------------------------------------------
+# Shared state — persists across the per-request env instances that
+# create_app creates.  All BugTriageEnvironment instances read/write here.
+# ---------------------------------------------------------------------------
+class _SharedState:
+    task: str = "easy"
+    max_steps: int = 3
+    current_scenario: Optional[BugScenario] = None
+    previous_actions: List[str] = []
+    episode_rewards: List[float] = []
+    step_count: int = 0
+    grader = EasyGrader()
+    scenarios: List[BugScenario] = []
+
+_shared = _SharedState()
+
+
+def _load_scenarios(task: str) -> List[BugScenario]:
+    raw = {"easy": EASY_SCENARIOS, "medium": MEDIUM_SCENARIOS, "hard": HARD_SCENARIOS}.get(task, EASY_SCENARIOS)
+    result = []
+    for s in raw:
+        d = s.copy()
+        d["ground_truth_type"] = normalize_bug_type(d["ground_truth_type"])
+        d["ground_truth_file"] = normalize_file(d["ground_truth_file"])
+        d["ground_truth_fix"] = normalize_fix_text(d["ground_truth_fix"])
+        result.append(BugScenario(**d))
+    return result
+
+
+# Pre-load scenarios
+_shared.scenarios = _load_scenarios("easy")
+
+
 class BugTriageEnvironment(Environment):
     """
-    OpenEnv Bug Triage Environment implementing the openenv-core Environment interface.
-    Supports three task difficulties: easy, medium, hard.
+    OpenEnv Bug Triage Environment.
+    Uses class-level shared state so reset()/step() work across
+    the per-request instances that create_app creates.
     """
 
-    SUPPORTS_CONCURRENT_SESSIONS: bool = True
+    SUPPORTS_CONCURRENT_SESSIONS: bool = False
 
     def __init__(self):
         self._state = State(episode_id=str(uuid4()), step_count=0)
-        self._task: str = "easy"
-        self._max_steps: int = 3
-        self._current_scenario: Optional[BugScenario] = None
-        self._previous_actions: List[str] = []
-        self._episode_rewards: List[float] = []
-        self._grader = EasyGrader()
-        self._scenarios: List[BugScenario] = self._load_scenarios("easy")
-
-    def _load_scenarios(self, task: str) -> List[BugScenario]:
-        raw = {"easy": EASY_SCENARIOS, "medium": MEDIUM_SCENARIOS, "hard": HARD_SCENARIOS}.get(task, EASY_SCENARIOS)
-        result = []
-        for s in raw:
-            d = s.copy()
-            d["ground_truth_type"] = normalize_bug_type(d["ground_truth_type"])
-            d["ground_truth_file"] = normalize_file(d["ground_truth_file"])
-            d["ground_truth_fix"] = normalize_fix_text(d["ground_truth_fix"])
-            result.append(BugScenario(**d))
-        return result
-
-    def _select_grader(self, task: str):
-        return {"easy": EasyGrader, "medium": MediumGrader, "hard": HardGrader}.get(task, EasyGrader)()
 
     def reset(
         self,
@@ -59,41 +71,45 @@ class BugTriageEnvironment(Environment):
         seed: Optional[int] = None,
         episode_id: Optional[str] = None,
     ) -> BugObservation:
+        global _shared
+
         if task and task in ("easy", "medium", "hard"):
-            self._task = task
-            self._scenarios = self._load_scenarios(task)
-            self._grader = self._select_grader(task)
+            _shared.task = task
+            _shared.scenarios = _load_scenarios(task)
+            _shared.grader = {"easy": EasyGrader, "medium": MediumGrader, "hard": HardGrader}[task]()
 
         if seed is not None:
             random.seed(seed)
 
-        self._previous_actions = []
-        self._episode_rewards = []
-        self._current_scenario = random.choice(self._scenarios)
+        _shared.previous_actions = []
+        _shared.episode_rewards = []
+        _shared.step_count = 0
+        _shared.current_scenario = random.choice(_shared.scenarios)
 
-        self._state = State(
-            episode_id=episode_id or str(uuid4()),
-            step_count=0,
-        )
+        self._state = State(episode_id=episode_id or str(uuid4()), step_count=0)
 
         return BugObservation(
-            bug_report=self._current_scenario.bug_report,
-            repo_modules=self._current_scenario.repo_modules,
+            bug_report=_shared.current_scenario.bug_report,
+            repo_modules=_shared.current_scenario.repo_modules,
             previous_actions=[],
+            reward=0.0,
+            done=False,
         )
 
     def step(self, action: BugAction) -> BugObservation:  # type: ignore[override]
-        if self._current_scenario is None:
+        global _shared
+
+        if _shared.current_scenario is None:
             return BugObservation(
                 bug_report="No active episode. Call reset() first.",
                 repo_modules=["main.py"],
                 previous_actions=[],
-                reward=0.0,
+                reward=0.05,
                 done=True,
             )
 
-        self._state.step_count += 1
-        step_num = self._state.step_count
+        _shared.step_count += 1
+        step_num = _shared.step_count
 
         norm_action = BugAction(
             bug_type=normalize_bug_type(action.bug_type),
@@ -101,19 +117,22 @@ class BugTriageEnvironment(Environment):
             fix=normalize_fix_text(action.fix),
         )
 
-        reward = self._grader.grade(norm_action, self._current_scenario, step_num)
-        reward = float(min(max(reward, 0.0), 1.0))
-        self._episode_rewards.append(reward)
+        reward = _shared.grader.grade(norm_action, _shared.current_scenario, step_num)
+        # Ensure strictly between 0 and 1 (exclusive)
+        reward = float(min(max(reward, 0.05), 0.95))
+        _shared.episode_rewards.append(reward)
 
         action_str = f"step_{step_num}: {action.model_dump_json()}"
-        self._previous_actions.append(action_str)
+        _shared.previous_actions.append(action_str)
 
-        done = step_num >= self._max_steps
+        done = step_num >= _shared.max_steps
+
+        self._state = State(episode_id=self._state.episode_id, step_count=step_num)
 
         return BugObservation(
-            bug_report=self._current_scenario.bug_report,
-            repo_modules=self._current_scenario.repo_modules,
-            previous_actions=self._previous_actions.copy(),
+            bug_report=_shared.current_scenario.bug_report,
+            repo_modules=_shared.current_scenario.repo_modules,
+            previous_actions=_shared.previous_actions.copy(),
             reward=reward,
             done=done,
         )
@@ -129,7 +148,7 @@ app = create_app(
     BugAction,
     BugObservation,
     env_name="openenv-bug-triage-env",
-    max_concurrent_envs=10,
+    max_concurrent_envs=1,
 )
 
 
@@ -140,9 +159,4 @@ def main(host: str = "0.0.0.0", port: int = 7860):
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=7860)
-    args = parser.parse_args()
     main()
