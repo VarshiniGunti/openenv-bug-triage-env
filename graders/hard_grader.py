@@ -4,15 +4,13 @@ import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from openenv.core.rubrics.base import Rubric
 from utils.normalization import normalize_bug_type, normalize_file, normalize_fix_text
 
 
-class HardGrader(Rubric):
+class HardGrader:
     """
     Grader for Hard task difficulty.
-    Extends openenv-core Rubric for validator compatibility.
-    Step 1: bug_type, Step 2: file, Step 3: fix (semantic).
+    Implements both grade() for internal use and forward() for openenv-core Rubric compatibility.
     """
 
     STOPWORDS = {
@@ -25,44 +23,50 @@ class HardGrader(Rubric):
 
     def __init__(self):
         """Initialize the HardGrader."""
-        super().__init__()
+        pass
 
     def forward(self, action, observation) -> float:
-        """
-        Compute reward from action and observation.
-        Called by the openenv-core validator via grader(action, observation).
-        """
+        """Called by openenv-core validator as grader(action, observation)."""
         try:
-            if hasattr(action, "bug_type"):
-                bug_type = normalize_bug_type(str(action.bug_type))
-                file_val = normalize_file(str(action.file))
-                fix_val = normalize_fix_text(str(action.fix))
-            elif isinstance(action, dict):
-                bug_type = normalize_bug_type(str(action.get("bug_type", "")))
-                file_val = normalize_file(str(action.get("file", "")))
-                fix_val = normalize_fix_text(str(action.get("fix", "")))
-            else:
-                return 0.35
-
-            if hasattr(observation, "ground_truth_type"):
-                gt_type = normalize_bug_type(str(observation.ground_truth_type))
-                gt_file = normalize_file(str(observation.ground_truth_file))
-                gt_fix = normalize_fix_text(str(observation.ground_truth_fix))
-            elif isinstance(observation, dict):
-                gt_type = normalize_bug_type(str(observation.get("ground_truth_type", "")))
-                gt_file = normalize_file(str(observation.get("ground_truth_file", "")))
-                gt_fix = normalize_fix_text(str(observation.get("ground_truth_fix", "")))
-            else:
-                return 0.35
-
-            score = 0.0
-            score += 0.35 if bug_type == gt_type else 0.05
-            score += 0.35 if file_val == gt_file else 0.05
-            fix_score = self.combined_fix_match(fix_val, gt_fix)
-            score += 0.05 + (0.9 * fix_score) * 0.4
-            return min(max(score / 3, 0.05), 0.95)
+            bug_type = normalize_bug_type(
+                str(action.bug_type) if hasattr(action, "bug_type")
+                else str(action.get("bug_type", "")) if isinstance(action, dict)
+                else str(action)
+            )
+            file_val = normalize_file(
+                str(action.file) if hasattr(action, "file")
+                else str(action.get("file", "")) if isinstance(action, dict)
+                else ""
+            )
+            fix_val = normalize_fix_text(
+                str(action.fix) if hasattr(action, "fix")
+                else str(action.get("fix", "")) if isinstance(action, dict)
+                else ""
+            )
+            gt_type = normalize_bug_type(
+                str(observation.ground_truth_type) if hasattr(observation, "ground_truth_type")
+                else str(observation.get("ground_truth_type", "")) if isinstance(observation, dict)
+                else ""
+            )
+            gt_file = normalize_file(
+                str(observation.ground_truth_file) if hasattr(observation, "ground_truth_file")
+                else str(observation.get("ground_truth_file", "")) if isinstance(observation, dict)
+                else ""
+            )
+            gt_fix = normalize_fix_text(
+                str(observation.ground_truth_fix) if hasattr(observation, "ground_truth_fix")
+                else str(observation.get("ground_truth_fix", "")) if isinstance(observation, dict)
+                else ""
+            )
+            s1 = 0.35 if bug_type == gt_type else 0.05
+            s2 = 0.35 if file_val == gt_file else 0.05
+            s3 = 0.05 + 0.9 * self.combined_fix_match(fix_val, gt_fix) * 0.4
+            return min(max((s1 + s2 + s3) / 3, 0.05), 0.95)
         except Exception:
             return 0.35
+
+    def __call__(self, action, observation) -> float:
+        return self.forward(action, observation)
     
     def extract_keywords(self, text: str) -> set:
         """
