@@ -183,38 +183,22 @@ class HardGrader:
             # Low similarity - minimal credit
             return 0.05
     
-    def grade(self, action: BugAction, scenario: BugScenario, step: int) -> float:
-        """
-        Grade an action for the Hard task.
-        
-        Args:
-            action: The agent's action
-            scenario: The bug scenario with ground truth
-            step: The current step (1, 2, or 3)
-            
-        Returns:
-            Reward value strictly between 0 and 1 (exclusive)
-        """
-        if step == 1:
-            # Step 1: Evaluate bug_type
-            if action.bug_type == scenario.ground_truth_type:
-                return 0.35  # Strictly between 0 and 1
-            else:
-                return 0.05  # Strictly between 0 and 1
-        elif step == 2:
-            # Step 2: Evaluate file
-            if action.file == scenario.ground_truth_file:
-                return 0.35  # Strictly between 0 and 1
-            else:
-                return 0.05  # Strictly between 0 and 1
-        elif step == 3:
-            # Step 3: Evaluate fix using combined semantic + keyword matching
-            match_score = self.combined_fix_match(action.fix, scenario.ground_truth_fix)
-            # Scale match score to range (0.05, 0.95) to stay strictly between 0 and 1
-            return 0.05 + (0.9 * match_score)
-        else:
-            return 0.05
-    
+    def grade(self, action, scenario_or_obs=None, step: int = 1) -> float:
+        """Grade method - supports 2-arg and 3-arg calling conventions."""
+        if scenario_or_obs is None:
+            return 0.35
+        try:
+            if step == 1:
+                return 0.35 if action.bug_type == scenario_or_obs.ground_truth_type else 0.05
+            elif step == 2:
+                return 0.35 if action.file == scenario_or_obs.ground_truth_file else 0.05
+            elif step == 3:
+                match_score = self.combined_fix_match(action.fix, scenario_or_obs.ground_truth_fix)
+                return 0.05 + (0.9 * match_score)
+        except Exception:
+            return self.forward(action, scenario_or_obs)
+        return 0.05
+
     def get_tasks(self):
         """Return list of tasks this grader handles."""
         return [{"id": "hard_bug", "grader": self}]
