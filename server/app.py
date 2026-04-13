@@ -68,15 +68,25 @@ class BugTriageEnvironment(Environment):
     def reset(
         self,
         task: Optional[str] = None,
+        task_id=None,
         seed: Optional[int] = None,
         episode_id: Optional[str] = None,
     ) -> BugObservation:
         global _shared
 
-        if task and task in ("easy", "medium", "hard"):
-            _shared.task = task
-            _shared.scenarios = _load_scenarios(task)
-            _shared.grader = {"easy": EasyGrader, "medium": MediumGrader, "hard": HardGrader}[task]()
+        # Normalize task from any format
+        raw = task or task_id
+        task_map = {
+            "easy": "easy", "easy_bug": "easy", "0": "easy", 0: "easy",
+            "medium": "medium", "medium_bug": "medium", "1": "medium", 1: "medium",
+            "hard": "hard", "hard_bug": "hard", "2": "hard", 2: "hard",
+        }
+        resolved = task_map.get(raw) or task_map.get(str(raw)) if raw is not None else None
+
+        if resolved:
+            _shared.task = resolved
+            _shared.scenarios = _load_scenarios(resolved)
+            _shared.grader = {"easy": EasyGrader, "medium": MediumGrader, "hard": HardGrader}[resolved]()
 
         if seed is not None:
             random.seed(seed)
@@ -99,14 +109,12 @@ class BugTriageEnvironment(Environment):
     def step(self, action: BugAction) -> BugObservation:  # type: ignore[override]
         global _shared
 
+        # Auto-reset if no active episode
         if _shared.current_scenario is None:
-            return BugObservation(
-                bug_report="No active episode. Call reset() first.",
-                repo_modules=["main.py"],
-                previous_actions=[],
-                reward=0.05,
-                done=True,
-            )
+            _shared.current_scenario = random.choice(_shared.scenarios)
+            _shared.step_count = 0
+            _shared.previous_actions = []
+            _shared.episode_rewards = []
 
         _shared.step_count += 1
         step_num = _shared.step_count
